@@ -1,0 +1,15 @@
+hydra-core
+hydra-colorlog
+torch
+torchvision
+cupy-cuda102
+pytorch3d
+pytorch-lightning
+numpy
+matplotlib
+opencv-python
+lpips
+tqdm
+wandb
+ConfigSpace
+ray[tune]

@@ -54,7 +54,9 @@ python
 
 ### Ablations
 CDNA: Unsupervised Learning for Physical Interaction through Video Prediction, (Finn et al., 2016):
+
 SNA: Self-supervised Visual Planning with Temporal Skip Connections, (Ebert et al., 2017):
+
 SV2P: Stochastic Variational Video Prediction, (Babaeizadeh et al., 2018):
 ```
 python 

@@ -6,7 +6,7 @@
 
 [Iman Nematollahi](http://www2.informatik.uni-freiburg.de/~nematoli/), 
 [Erick Rosete Beas](https://erickrosete.com/), 
-[Seyed Mahdi B. Azad](),  
+[Seyed Mahdi B. Azad](), 
 [Raghu Rajan](https://ml.informatik.uni-freiburg.de/profile/rajan/), 
 [Frank Hutter](https://ml.informatik.uni-freiburg.de/profile/hutter/), 
 [Wolfram Burgard](http://www2.informatik.uni-freiburg.de/~burgard)

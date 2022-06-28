@@ -71,7 +71,7 @@ If you find the code useful, please cite:
 
 **T3VIP**
 ```bibtex
-@inproceedings{nematollahi22icra_t3vip,
+@inproceedings{nematollahi22iros,
     author  = {Iman Nematollahi and Erick Rosete-Beas and Seyed Mahdi B. Azad and Raghu Rajan and Frank Hutter and Wolfram Burgard}
     title   = {T3VIP: Transformation-based 3D Video Prediction},
     booktitle={Proceedings of the IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},

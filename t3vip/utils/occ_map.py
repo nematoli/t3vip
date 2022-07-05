@@ -24,7 +24,7 @@ def project_points(tfm_ptc, intrinsics):
 
     old_z = occ_map[bs_coord, 0, new_xpix, new_ypix]
     new_z = z.reshape(-1)
-    occ_map[bs_coord, 0, new_xpix, new_ypix] = torch.where(new_z < old_z, new_z, old_z)
+    occ_map[bs_coord, 0, new_ypix, new_xpix] = torch.where(new_z < old_z, new_z, old_z)
 
     occ_map = occ_map.ge(float("inf")).float()
     return occ_map

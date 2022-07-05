@@ -4,6 +4,7 @@ exclude = .git
 max-line-length = 120
 select = E,F,W,C
 ignore=W503, # line break before binary operator, need for black
+       W605,
        E203, # whitespace before ':'. Opposite convention enforced by black
        E731, # do not assign a lambda expression, use a def
        E722,

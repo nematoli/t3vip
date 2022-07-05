@@ -32,6 +32,13 @@ class PlotCallback(pl.Callback):
             flows = [transforms.functional.to_tensor(np.moveaxis(flow.squeeze(), 0, -1)) for flow in flows]
             flowdisp = torchvision.utils.make_grid(torch.stack(flows))
 
+        if "occmap_t" in outputs:
+            occmapdisp = torchvision.utils.make_grid(
+                torch.cat([outputs["occmap_t"].narrow(0, id, 1)], 0).cpu().view(-1, 1, H, W),
+                normalize=True,
+                range=(0, 1),
+            )
+
         gt_rgbdisp = torchvision.utils.make_grid(batch["rgb_obs"][id][1:])
         rgbdisp = torchvision.utils.make_grid(outputs["nxtrgb"][id])
 
@@ -45,6 +52,13 @@ class PlotCallback(pl.Callback):
             if "oflow_t" in outputs:
                 pl_module.logger.experiment.log(
                     {"OFlow/pred-{}".format(mode): wandb.Image(flowdisp)},
+                    commit=False,
+                )
+            if "occmap_t" in outputs:
+                pl_module.logger.experiment.log(
+                    {
+                        "Masks/Occ_{}".format(mode): wandb.Image(occmapdisp),
+                    },
                     commit=False,
                 )
 
@@ -66,6 +80,8 @@ class PlotCallback(pl.Callback):
         elif isinstance(pl_module.logger, TensorBoardLogger):
             if "oflow_t" in outputs:
                 pl_module.logger.experiment.add_image("OFlow/pred-{}".format(mode), flowdisp, pl_module.global_step)
+            if "occmap_t" in outputs:
+                pl_module.logger.experiment.add_image("Masks/Occ_{}".format(mode), occmapdisp, pl_module.global_step)
             pl_module.logger.experiment.add_image("RGBs/gt-{}".format(mode), gt_rgbdisp, pl_module.global_step)
             pl_module.logger.experiment.add_image("RGBs/pred-{}".format(mode), rgbdisp, pl_module.global_step)
             pl_module.logger.experiment.add_image("Masks/{}".format(mode), masksdisp, pl_module.global_step)

@@ -13,6 +13,7 @@ from t3vip.helpers import softsplat
 from t3vip.utils.transforms import RealDepthTensor, ScaleDepthTensor
 from t3vip.helpers.losses import calc_3d_loss, calc_2d_loss
 from t3vip.occ_map.OccMap import OccMap
+from t3vip.utils.occ_map import project_points
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,7 @@ class T3VIP(pl.LightningModule):
         self.scale_dpt = ScaleDepthTensor(self.min_dpt, self.max_dpt)
         self.real_dpt = RealDepthTensor(self.min_dpt, self.max_dpt)
         self.OccMap = OccMap(intrinsics)
+        self.intrinsics = intrinsics
         self.save_hyperparameters()
 
     def configure_optimizers(self):
@@ -205,7 +207,8 @@ class T3VIP(pl.LightningModule):
         fwd_dpt = softsplat.FunctionSoftsplat(tfmptc_t, oflow_t, None, self.splat).narrow(1, 2, 1)
 
         inp_rgb, inp_dpt, inp_lstms = self.rgbd_inpainter(emb_t, inp_lstms)
-        occ_map = self.OccMap(tfmptc_t).to(tfmptc_t.device, torch.float32)
+        occ_map = project_points(tfmptc_t, self.intrinsics)
+        # occ_map = self.OccMap(tfmptc_t).to(tfmptc_t.device, torch.float32)
 
         nxt_rgb = (1 - occ_map) * fwd_rgb + occ_map * inp_rgb
         nxt_dpt = (1 - occ_map) * fwd_dpt + occ_map * self.real_dpt(inp_dpt)

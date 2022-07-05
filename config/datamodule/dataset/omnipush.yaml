@@ -1,0 +1,12 @@
+_target_: t3vip.datasets.omnipush_dataset.OmnipushDataset
+_recursive_: false
+
+data_dir:     ../omnipush
+img_ht:       480
+img_wd:       480
+dim_action:   3
+dim_state:    0
+far_val:      1.2
+min_dpt:      0.35
+max_dpt:      1.2
+frac_used:    1.0

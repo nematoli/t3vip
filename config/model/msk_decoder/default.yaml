@@ -1,0 +1,7 @@
+_target_: t3vip.models.decoders.msk_decoder.MskDec
+chn: ${model.obs_encoder.chn}
+dims: ${model.obs_encoder.dims}
+num_masks: 10
+extra: false
+norm: ${model.obs_encoder.norm}
+activation: ${model.obs_encoder.activation}

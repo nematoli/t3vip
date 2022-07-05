@@ -1,0 +1,95 @@
+import random
+import torch
+import torchvision
+import torchvision.transforms as transforms
+import pytorch_lightning as pl
+from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
+import wandb
+from t3vip.utils.cam_utils import flow_to_rgb
+import numpy as np
+from t3vip.helpers import metrics
+
+
+class PlotCallback(pl.Callback):
+    def __init__(
+        self,
+        vis_imgs=False,
+        vis_freq=500,
+    ):
+        super().__init__()
+
+        self.vis_imgs = vis_imgs
+        self.vis_freq = vis_freq
+
+    @torch.no_grad()
+    def log_images(self, pl_module, batch, outputs, mode="train"):
+        if (not self.vis_imgs) or pl_module.global_step % self.vis_freq != 0:
+            return
+        B, S, K, H, W = outputs["masks_t"].size()
+        id = random.randint(0, B - 1)
+        if "oflow_t" in outputs:
+            flows = [flow_to_rgb(outputs["oflow_t"][:, i].narrow(0, id, 1)) for i in range(S)]
+            flows = [transforms.functional.to_tensor(np.moveaxis(flow.squeeze(), 0, -1)) for flow in flows]
+            flowdisp = torchvision.utils.make_grid(torch.stack(flows))
+
+        gt_rgbdisp = torchvision.utils.make_grid(batch["rgb_obs"][id][1:])
+        rgbdisp = torchvision.utils.make_grid(outputs["nxtrgb"][id])
+
+        masksdisp = torchvision.utils.make_grid(
+            outputs["masks_t"].narrow(0, id, 1).view(-1, 1, H, W),
+            nrow=K,
+            normalize=False,
+        )  # value_range=(0, 1)
+
+        if isinstance(pl_module.logger, WandbLogger):
+            if "oflow_t" in outputs:
+                pl_module.logger.experiment.log(
+                    {"OFlow/pred-{}".format(mode): wandb.Image(flowdisp)},
+                    commit=False,
+                )
+
+            pl_module.logger.experiment.log(
+                {"RGBs/gt-{}".format(mode): wandb.Image(gt_rgbdisp)},
+                commit=False,
+            )
+
+            pl_module.logger.experiment.log(
+                {"RGBs/pred-{}".format(mode): wandb.Image(rgbdisp)},
+                commit=False,
+            )
+
+            pl_module.logger.experiment.log(
+                {"Masks/{}".format(mode): wandb.Image(masksdisp)},
+                commit=False,
+            )
+
+        elif isinstance(pl_module.logger, TensorBoardLogger):
+            if "oflow_t" in outputs:
+                pl_module.logger.experiment.add_image("OFlow/pred-{}".format(mode), flowdisp, pl_module.global_step)
+            pl_module.logger.experiment.add_image("RGBs/gt-{}".format(mode), gt_rgbdisp, pl_module.global_step)
+            pl_module.logger.experiment.add_image("RGBs/pred-{}".format(mode), rgbdisp, pl_module.global_step)
+            pl_module.logger.experiment.add_image("Masks/{}".format(mode), masksdisp, pl_module.global_step)
+
+        else:
+            raise ValueError
+
+    @torch.no_grad()
+    def log_metrics(self, pl_module, batch, outputs, on_step=False, on_epoch=False, mode="train"):
+        psnr_avg, ssim_avg = metrics.compute_frame_metrics(
+            batch["rgb_obs"].to(outputs["nxtrgb"].device),
+            outputs["nxtrgb"],
+        )
+
+        pl_module.log("metrics/{}-PSNR".format(mode), psnr_avg, on_step=on_step, on_epoch=on_epoch)
+        pl_module.log("metrics/{}-SSIM".format(mode), ssim_avg, on_step=on_step, on_epoch=on_epoch)
+        # pl_module.log(
+        #     "metrics/{}-VGG".format(mode), vgg_avg, on_step=on_step, on_epoch=on_epoch
+        # )
+
+    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, **kwargs):
+        self.log_images(pl_module, batch, outputs["out"], mode="train")
+        self.log_metrics(pl_module, batch, outputs["out"], on_step=True, on_epoch=False, mode="train")
+
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        self.log_images(pl_module, batch, outputs["out"], mode="val")
+        self.log_metrics(pl_module, batch, outputs["out"], on_step=False, on_epoch=True, mode="val")

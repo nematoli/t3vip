@@ -1,0 +1,3 @@
+_target_: t3vip.helpers.visualizer.PlotCallback
+vis_imgs: false
+vis_freq: ${trainer.log_every_n_steps}

@@ -1,0 +1,17 @@
+defaults:
+  - obs_encoder: rgb
+  - act_encoder: default
+  - msk_decoder: default
+  - knl_decoder: default
+  - optimizer: adam
+  - lr_scheduler: none
+
+_target_: t3vip.models.cdna.CDNA
+_recursive_: false
+
+intrinsics: ???
+xygrid: ???
+act_cond: true
+num_context_frames: 2
+alpha_rcr: ${loss.alpha_rcr}
+reuse_first_rgb: false

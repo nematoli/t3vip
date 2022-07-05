@@ -1,0 +1,4 @@
+data_dir: ${datamodule.dataset.data_dir}
+img_ht: ${datamodule.dataset.img_ht}
+img_wd: ${datamodule.dataset.img_wd}
+resolution: ${datamodule.resolution}

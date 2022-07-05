@@ -1,0 +1,13 @@
+_target_: t3vip.datasets.dexhand_dataset.DexHandDataset
+_recursive_: false
+
+data_dir:     ../dexhand
+img_ht:       240
+img_wd:       240
+dim_action:   24
+dim_state:    0
+far_val:      10.0
+min_dpt:      0.8264
+max_dpt:      1.3312
+frac_used:    1.0
+

@@ -1,0 +1,10 @@
+# 2DLoss
+alpha_rcr:          1.0
+alpha_ofs:          1.0
+# 3DLoss
+alpha_rcd:          1.0
+alpha_knn:          1.0
+alpha_sfs:          1.0
+
+# klLoss
+alpha_kl:           0.0

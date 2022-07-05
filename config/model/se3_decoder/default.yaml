@@ -1,0 +1,6 @@
+_target_: t3vip.models.decoders.se3_decoder.SE3Dec
+chn: ${model.obs_encoder.chn}
+dims: ${model.obs_encoder.dims}
+num_masks: ${model.msk_decoder.num_masks}
+se3_type: se3six
+activation: ${model.obs_encoder.activation}

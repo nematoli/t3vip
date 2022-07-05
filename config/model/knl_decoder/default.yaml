@@ -1,0 +1,4 @@
+_target_: t3vip.models.decoders.knl_decoder.KnlDec
+chn: ${model.obs_encoder.chn}
+dims: ${model.obs_encoder.dims}
+num_masks: ${model.msk_decoder.num_masks}

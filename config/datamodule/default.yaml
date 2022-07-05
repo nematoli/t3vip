@@ -1,0 +1,13 @@
+defaults:
+  - dataset: calvin
+  - transforms: calvin
+
+_target_: t3vip.datasets.t3vip_data_module.T3VIPDataModule
+_recursive_: false
+batch_size:   8
+num_workers:  8
+resolution:   64
+intrinsics:   ???
+xygrid:       ???
+seq_len:      12
+step_len:     1

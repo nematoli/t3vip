@@ -1,0 +1,6 @@
+_target_: t3vip.models.encoders.obs_encoder.ObsEnc
+chn:        [32, 32, 32, 64, 64, 128, 64, 32, 32]
+dims:       [32, 32, 32, 16, 16, 8, 16, 32]
+input_chn:  4
+norm:       none
+activation: relu

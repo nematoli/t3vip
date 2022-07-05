@@ -1,0 +1,15 @@
+rgb:
+  - _target_: torchvision.transforms.ToTensor
+  - _target_: torchvision.transforms.Resize
+    size: 64
+    interpolation: bilinear
+depth:
+  - _target_: torchvision.transforms.ToTensor
+  - _target_: torchvision.transforms.Resize
+    size: 64
+    interpolation: nearest
+  - _target_: t3vip.utils.transforms.AddGaussianNoise
+    mean: 0
+    std: 0
+action:
+  - _target_: t3vip.utils.transforms.ArrayToTensor

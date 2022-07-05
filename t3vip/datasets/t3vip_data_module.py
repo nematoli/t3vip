@@ -32,7 +32,7 @@ class T3VIPDataModule(pl.LightningDataModule):
         # self.test_dataset = None
 
         self.dataset = dataset
-        root_data_path = Path(self.dataset.data_dir)
+        root_data_path = Path(self.dataset.data_dir).expanduser()
         if not root_data_path.is_absolute():
             root_data_path = Path(t3vip.__file__).parent / root_data_path
         self.train_dir = root_data_path / "training"

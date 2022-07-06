@@ -1,0 +1,4 @@
+defaults:
+  - setup
+  - dataset: omnipush
+  - transforms: default

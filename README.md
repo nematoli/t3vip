@@ -33,12 +33,20 @@ sh install.sh
 If you want to train on the DexHand dataset:
 ```bash
 cd $T3VIP_ROOT/dataset
-sh download_data.sh 
+sh download_data.sh dexhand
 ```
 ### CALVIN
-
+If you want to train on the CALVIN dataset:
+```bash
+cd $T3VIP_ROOT/dataset
+sh download_data.sh calvin
+```
 ### Omnipush
-
+If you want to train on the Omnipush dataset:
+```bash
+cd $T3VIP_ROOT/dataset
+sh download_data.sh omnipush
+```
 ### Pre-trained Models
 We provide our final models 
 ```bash

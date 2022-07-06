@@ -1,0 +1,4 @@
+defaults:
+  - setup
+  - dataset: dexhand
+  - transforms: default

@@ -77,17 +77,22 @@ def read_calvin_intrinsics(filename):
 
 
 def get_intrinsics(cfg, dataset_name):
-    load_dir = Path(cfg.data_dir).expanduser()
+    load_dir = Path(cfg.dataset.data_dir).expanduser()
     if dataset_name == "CalvinDataset":
-        print("load_dir", load_dir)
-        yaml_file = load_dir / "validation" / ".hydra" / "merged_config.yaml"
+
+        if cfg.dataset.env != "env_d":
+            yaml_file = load_dir / "task_ABC_D" / "validation" / ".hydra" / "merged_config.yaml"
+        else:
+            yaml_file = load_dir / "task_D_D" / "validation" / ".hydra" / "merged_config.yaml"
+        print("load_dir", yaml_file)
+
         intrinsics = read_calvin_intrinsics(yaml_file)
     else:
         print("load_dir", load_dir)
         intrinsics = read_intrinsics_file(load_dir.joinpath("intrinsics.txt"))
     # Setup camera intrinsics
-    img_scale = cfg.resolution / cfg.img_ht
-    cfg.img_ht = cfg.img_wd = cfg.resolution
+    img_scale = cfg.resolution / cfg.dataset.img_ht
+    cfg.dataset.img_ht = cfg.dataset.img_wd = cfg.resolution
     cam_intrinsics = {
         "fx": img_scale * intrinsics["fx"],
         "fy": img_scale * intrinsics["fy"],
@@ -100,8 +105,8 @@ def get_intrinsics(cfg, dataset_name):
     }
     print(
         "Intrinsics => ht: {}, wd: {}, fx: {}, fy: {}, cx: {}, cy: {}, offx: {}, offy: {}, sx: {}, sy: {}".format(
-            cfg.img_ht,
-            cfg.img_wd,
+            cfg.dataset.img_ht,
+            cfg.dataset.img_wd,
             cam_intrinsics["fx"],
             cam_intrinsics["fy"],
             cam_intrinsics["cx"],
@@ -113,7 +118,7 @@ def get_intrinsics(cfg, dataset_name):
         )
     )
     # Compute intrinsic grid
-    xygrid = cam_xygrid(cfg.resolution, cfg.resolution, cam_intrinsics)
+    xygrid = cam_xygrid(cfg.dataset.img_ht, cfg.dataset.img_wd, cam_intrinsics)
     return cam_intrinsics, xygrid
 
 

@@ -1,7 +1,7 @@
 _target_: t3vip.datasets.omnipush_dataset.OmnipushDataset
 _recursive_: false
 
-data_dir:     ~/t3vip/omnipush
+data_dir:     ~/t3vip/dataset/omnipush
 img_ht:       480
 img_wd:       480
 dim_action:   3

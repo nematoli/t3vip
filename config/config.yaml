@@ -1,7 +1,6 @@
 defaults:
   - callbacks: default
   - datamodule: default
-  - intrinsics: default
   - model: T3VIP
   - loss: default
   - trainer: default

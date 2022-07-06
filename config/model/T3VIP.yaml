@@ -1,20 +1,12 @@
 defaults:
+  - setup
   - obs_encoder: rgbd
-  - act_encoder: default
-  - msk_decoder: default
   - se3_decoder: default
   - rgbd_inpainter: default
-  - optimizer: adam
-  - lr_scheduler: none
 
 _target_: t3vip.models.t3vip.T3VIP
 _recursive_: false
 
-intrinsics: ???
-xygrid: ???
-act_cond: true
-num_context_frames: 2
-prediction_horizon: 10
 splat: average
 alpha_rcr: ${loss.alpha_rcr}
 alpha_rcd: ${loss.alpha_rcd}

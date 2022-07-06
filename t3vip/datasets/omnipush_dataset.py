@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class OmnipushDataset(BaseDataset):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ep_info, *args, **kwargs):
         super(OmnipushDataset, self).__init__(*args, **kwargs)
 
         episode_dirs = os.listdir(self.data_dir)

@@ -1,7 +1,7 @@
 _target_: t3vip.datasets.dexhand_dataset.DexHandDataset
 _recursive_: false
 
-data_dir:     ~/t3vip/dexhand
+data_dir:     ~/t3vip/dataset/dexhand
 img_ht:       240
 img_wd:       240
 dim_action:   24

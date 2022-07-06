@@ -1,0 +1,11 @@
+defaults:
+  - act_encoder: default
+  - msk_decoder: default
+  - optimizer: adam
+  - lr_scheduler: none
+
+intrinsics: ???
+xygrid: ???
+act_cond: true
+num_context_frames: 2
+prediction_horizon: 10

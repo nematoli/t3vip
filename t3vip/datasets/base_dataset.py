@@ -33,6 +33,7 @@ class BaseDataset(Dataset):
         transforms: Dict,
         intrinsics: Dict,
         xygrid: torch.Tensor,
+        env: str = None,
     ):
         self.data_dir = data_dir
         self.img_ht = img_ht
@@ -53,6 +54,7 @@ class BaseDataset(Dataset):
         self.num_frames = dict()
         self.rgb_prefix = "rgbsub"
         self.dpt_prefix = "depthsub"
+        self.env = env
 
         self.transform_rgb, self.transform_dpt, self.transform_act = None, None, None
         if "rgb" in self.transforms:

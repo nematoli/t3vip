@@ -1,7 +1,7 @@
 _target_: t3vip.datasets.calvin_dataset.CalvinDataset
 _recursive_: false
 
-data_dir:     ~/t3vip/calvin/task_D_D
+data_dir:     ~/t3vip/dataset/calvin/
 img_ht:       200
 img_wd:       200
 dim_action:   7
@@ -10,3 +10,4 @@ far_val:      6.3
 min_dpt:      3.7
 max_dpt:      6.3
 frac_used:    1.0
+env: env_d

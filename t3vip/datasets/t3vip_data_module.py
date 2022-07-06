@@ -35,8 +35,22 @@ class T3VIPDataModule(pl.LightningDataModule):
         root_data_path = Path(self.dataset.data_dir).expanduser()
         if not root_data_path.is_absolute():
             root_data_path = Path(t3vip.__file__).parent / root_data_path
-        self.train_dir = root_data_path / "training"
-        self.val_dir = root_data_path / "validation"
+
+        dataset_name = self.dataset["_target_"].split(".")[-1]
+        if dataset_name == "CalvinDataset":
+            if self.dataset.env != "env_d":
+                self.train_dir = self.val_dir = root_data_path / "task_ABC_D" / "training"
+            else:
+                self.train_dir = root_data_path / "task_D_D" / "training"
+                self.val_dir = root_data_path / "task_D_D" / "validation"
+
+            self.train_episodes_info = root_data_path / "task_idx" / self.dataset.env / "training"
+            self.val_episodes_info = root_data_path / "task_idx" / self.dataset.env / "validation"
+        else:
+            self.train_dir = root_data_path / "training"
+            self.val_dir = root_data_path / "validation"
+            self.train_episodes_info = self.val_episodes_info = None
+
         # self.test_dir = root_data_path / "test"
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -59,6 +73,7 @@ class T3VIPDataModule(pl.LightningDataModule):
             transforms=self.transforms,
             intrinsics=self.intrinsics,
             xygrid=self.xygrid,
+            ep_info=self.train_episodes_info,
         )
         self.val_dataset = hydra.utils.instantiate(
             self.dataset,
@@ -71,6 +86,7 @@ class T3VIPDataModule(pl.LightningDataModule):
             transforms=self.transforms,
             intrinsics=self.intrinsics,
             xygrid=self.xygrid,
+            ep_info=self.val_episodes_info,
         )
         # self.test_dataset = hydra.utils.instantiate(
         #     self.dataset,

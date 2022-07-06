@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class CalvinDataset(BaseDataset):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ep_info, *args, **kwargs):
         super(CalvinDataset, self).__init__(*args, **kwargs)
-        self.episode_lookup = self.load_file_indices(self.data_dir)
+        self.episode_lookup = self.load_file_indices(ep_info)
         self.naming_pattern, self.n_digits = self.lookup_naming_pattern()
 
     def __len__(self):
@@ -107,26 +107,29 @@ class CalvinDataset(BaseDataset):
         }
         return batch
 
-    def load_file_indices(self, abs_datasets_dir: Path) -> Tuple[List, List]:
+    def load_file_indices(self, ep_info: Path) -> Tuple[List, List]:
         """
         this method builds the mapping from index to file_name used for loading the episodes
         parameters
         ----------
-        abs_datasets_dir:               absolute path of the directory containing the dataset
+        ep_info:               absolute path of the directory containing the dataset
         returns
         ----------
         episode_lookup:                 list for the mapping from training example index to episode (file) index
         max_batched_length_per_demo:    list of possible starting indices per episode
         """
-        assert abs_datasets_dir.is_dir()
+        assert ep_info.is_dir()
 
         episode_lookup = []
 
-        ep_start_end_ids = np.load(abs_datasets_dir / "ep_start_end_ids.npy")
+        ep_start_end_ids = np.load(ep_info / "ep_start_end_ids.npy")
+        # if ep_start_end_ids.ndim == 1:
+        #     ep_start_end_ids = np.expand_dims(ep_start_end_ids, axis=0)
         frac_used_idx = np.random.choice(
             a=ep_start_end_ids.shape[0],
             size=math.floor(self.frac_used * ep_start_end_ids.shape[0]),
         )
+
         ep_start_end_ids = ep_start_end_ids[frac_used_idx]
         logger.info(f'Found "ep_start_end_ids.npy" with {len(ep_start_end_ids)} episodes.')
         for start_idx, end_idx in ep_start_end_ids:

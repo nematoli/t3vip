@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class DexHandDataset(BaseDataset):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ep_info, *args, **kwargs):
         super(DexHandDataset, self).__init__(*args, **kwargs)
 
         episode_dirs = os.listdir(self.data_dir)
@@ -70,7 +70,7 @@ class DexHandDataset(BaseDataset):
         if self.transform_rgb:
             rgbs = [self.transform_rgb(rgb) for rgb in rgbs]
         if self.transform_act:
-            acts = [self.transform_act(acts)]
+            acts = [self.transform_act(act) for act in acts]
 
         ptcs = [get_ptc_from_dpt(dpt, self.xygrid).squeeze(0) for dpt in dpts]
 

@@ -48,6 +48,7 @@ class T3VIP(pl.LightningModule):
         xygrid: torch.Tensor,
         act_cond: bool,
         num_context_frames: int,
+        prediction_horizon: int,
         splat: str,
         alpha_rcr: float,
         alpha_rcd: float,
@@ -71,6 +72,7 @@ class T3VIP(pl.LightningModule):
         self.xygrid = torch.unsqueeze(xygrid, dim=0)
         self.act_cond = act_cond
         self.num_context_frames = num_context_frames
+        self.prediction_horizon = prediction_horizon
         self.splat = splat
         self.alpha_rcr = alpha_rcr
         self.alpha_rcd = alpha_rcd

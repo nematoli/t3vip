@@ -13,5 +13,6 @@ intrinsics: ???
 xygrid: ???
 act_cond: true
 num_context_frames: 2
+prediction_horizon: 10
 alpha_rcr: ${loss.alpha_rcr}
 reuse_first_rgb: false

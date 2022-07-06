@@ -9,5 +9,5 @@ num_workers:  8
 resolution:   64
 intrinsics:   ???
 xygrid:       ???
-seq_len:      12
+seq_len:      ???
 step_len:     1

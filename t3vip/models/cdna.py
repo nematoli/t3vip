@@ -43,6 +43,7 @@ class CDNA(pl.LightningModule):
         xygrid: torch.Tensor,
         act_cond: bool,
         num_context_frames: int,
+        prediction_horizon: int,
         alpha_rcr: float,
         reuse_first_rgb: bool,
     ):
@@ -55,6 +56,7 @@ class CDNA(pl.LightningModule):
         self.lr_scheduler = lr_scheduler
         self.act_cond = act_cond
         self.num_context_frames = num_context_frames
+        self.prediction_horizon = prediction_horizon
         self.alpha_rcr = alpha_rcr
         self.reuse_first_rgb = reuse_first_rgb
         if self.reuse_first_rgb:

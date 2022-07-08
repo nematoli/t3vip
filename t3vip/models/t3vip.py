@@ -56,6 +56,7 @@ class T3VIP(pl.LightningModule):
         alpha_sfs: float,
         alpha_ofs: float,
         alpha_kl: float,
+        alpha_l: int,
         min_dpt: float,
         max_dpt: float,
         time_invariant: bool,
@@ -80,6 +81,7 @@ class T3VIP(pl.LightningModule):
         self.alpha_sfs = alpha_sfs
         self.alpha_ofs = alpha_ofs
         self.alpha_kl = alpha_kl
+        self.alpha_l = alpha_l
         self.min_dpt = min_dpt
         self.max_dpt = max_dpt
         self.time_invariant = time_invariant
@@ -327,6 +329,7 @@ class T3VIP(pl.LightningModule):
             self.alpha_rcd,
             self.alpha_knn,
             self.alpha_sfs,
+            self.alpha_l,
             dpt_2,
             ptc_2,
             rgb_1,
@@ -337,7 +340,7 @@ class T3VIP(pl.LightningModule):
         loss_3d = rcd_loss + knn_loss + sfs_loss
 
         rcr_loss, ofs_loss = calc_2d_loss(
-            self.alpha_rcr, self.alpha_ofs, rgb_1, rgb_2, outputs["nxtrgb"], outputs["oflow_t"]
+            self.alpha_rcr, self.alpha_ofs, self.alpha_l, rgb_1, rgb_2, outputs["nxtrgb"], outputs["oflow_t"]
         )
         loss_2d = rcr_loss + ofs_loss
 

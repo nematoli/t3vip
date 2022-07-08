@@ -7,4 +7,5 @@ _target_: t3vip.models.cdna.CDNA
 _recursive_: false
 
 alpha_rcr: ${loss.alpha_rcr}
+alpha_l: ${loss.alpha_l}
 reuse_first_rgb: false

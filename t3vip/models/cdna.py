@@ -45,6 +45,7 @@ class CDNA(pl.LightningModule):
         num_context_frames: int,
         prediction_horizon: int,
         alpha_rcr: float,
+        alpha_l: int,
         reuse_first_rgb: bool,
     ):
         super(CDNA, self).__init__()
@@ -58,6 +59,7 @@ class CDNA(pl.LightningModule):
         self.num_context_frames = num_context_frames
         self.prediction_horizon = prediction_horizon
         self.alpha_rcr = alpha_rcr
+        self.alpha_l = alpha_l
         self.reuse_first_rgb = reuse_first_rgb
         if self.reuse_first_rgb:
             self.msk_decoder.num_masks += 1
@@ -245,7 +247,7 @@ class CDNA(pl.LightningModule):
 
         rgb_1, rgb_2 = batch["rgb_obs"][:, :-1], batch["rgb_obs"][:, 1:]
 
-        rcr_loss, _ = calc_2d_loss(self.alpha_rcr, 0, rgb_1, rgb_2, outputs["nxtrgb"], None)
+        rcr_loss, _ = calc_2d_loss(self.alpha_rcr, 0, self.alpha_l, rgb_1, rgb_2, outputs["nxtrgb"], None)
 
         total_loss = rcr_loss
 

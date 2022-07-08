@@ -31,7 +31,7 @@ def smooth_loss(alpha_fs, rgb_1, flow):
     return fs_loss
 
 
-def calc_3d_loss(alpha_rcd, alpha_knn, alpha_sfs, dpt_2, ptc_2, rgb_1, nxtdpts, tfmptc_1, sflow):
+def calc_3d_loss(alpha_rcd, alpha_knn, alpha_sfs, alpha_l, dpt_2, ptc_2, rgb_1, nxtdpts, tfmptc_1, sflow):
     rcd_loss, knn_loss, sfs_loss = (
         torch.tensor(0.0).to(rgb_1.device),
         torch.tensor(0.0).to(rgb_1.device),
@@ -44,7 +44,7 @@ def calc_3d_loss(alpha_rcd, alpha_knn, alpha_sfs, dpt_2, ptc_2, rgb_1, nxtdpts, 
     dpt_2, nxtdpts = batch_seq_view(dpt_2), batch_seq_view(nxtdpts)
 
     if alpha_rcd != 0:
-        rcd_loss = rec_loss(alpha_rcd, nxtdpts, dpt_2)
+        rcd_loss = rec_loss(alpha_rcd, nxtdpts, dpt_2, alpha_l)
 
     if alpha_knn != 0:
         knn_loss = ptc_knn_loss(alpha_knn, ptc_2, tfmptc_1)
@@ -55,7 +55,7 @@ def calc_3d_loss(alpha_rcd, alpha_knn, alpha_sfs, dpt_2, ptc_2, rgb_1, nxtdpts, 
     return rcd_loss, knn_loss, sfs_loss
 
 
-def calc_2d_loss(alpha_rcr, alpha_ofs, rgb_1, rgb_2, nxtrgbs, oflow):
+def calc_2d_loss(alpha_rcr, alpha_ofs, alpha_l, rgb_1, rgb_2, nxtrgbs, oflow):
     rcr_loss, ofs_loss = (
         torch.tensor(0.0).to(rgb_1.device),
         torch.tensor(0.0).to(rgb_1.device),
@@ -65,7 +65,7 @@ def calc_2d_loss(alpha_rcr, alpha_ofs, rgb_1, rgb_2, nxtrgbs, oflow):
     rgb_1, rgb_2, nxtrgbs = batch_seq_view(rgb_1, size), batch_seq_view(rgb_2, size), batch_seq_view(nxtrgbs, size)
 
     if alpha_rcr != 0:
-        rcr_loss = rec_loss(alpha_rcr, nxtrgbs, rgb_2)
+        rcr_loss = rec_loss(alpha_rcr, nxtrgbs, rgb_2, alpha_l)
     if alpha_ofs != 0:
         oflow = batch_seq_view(oflow)
         ofs_loss = smooth_loss(alpha_ofs, rgb_1, oflow)

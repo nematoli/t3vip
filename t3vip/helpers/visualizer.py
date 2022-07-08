@@ -98,9 +98,7 @@ class PlotCallback(pl.Callback):
 
         pl_module.log("metrics/{}-PSNR".format(mode), psnr_avg, on_step=on_step, on_epoch=on_epoch)
         pl_module.log("metrics/{}-SSIM".format(mode), ssim_avg, on_step=on_step, on_epoch=on_epoch)
-        # pl_module.log(
-        #     "metrics/{}-VGG".format(mode), vgg_avg, on_step=on_step, on_epoch=on_epoch
-        # )
+        # pl_module.log("metrics/{}-VGG".format(mode), vgg_avg, on_step=on_step, on_epoch=on_epoch)
 
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, **kwargs):
         self.log_images(pl_module, batch, outputs["out"], mode="train")
@@ -109,3 +107,7 @@ class PlotCallback(pl.Callback):
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         self.log_images(pl_module, batch, outputs["out"], mode="val")
         self.log_metrics(pl_module, batch, outputs["out"], on_step=False, on_epoch=True, mode="val")
+
+    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        self.log_images(pl_module, batch, outputs["out"], mode="test")
+        self.log_metrics(pl_module, batch, outputs["out"], on_step=False, on_epoch=True, mode="test")

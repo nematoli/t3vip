@@ -204,6 +204,27 @@ class CDNA(pl.LightningModule):
         self.log_loss(losses, mode="val")
         return {"loss": losses["loss_total"], "out": out}
 
+    def test_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Dict[str, Union[torch.Tensor, Any]]:
+        """
+        Compute and return the test loss.
+        Args:
+            batch (dict):
+                - 'ptc_obs' (Tensor): Two consecutive point clouds of static camera
+                - 'depth_obs' (Tensor): Two consecutive depth images of static camera
+                - 'rgb_obs' (Tensor): Two consecutive RGB images of static camera
+                - 'action' (Tensor): Ground truth action between two consecutive frames.
+            batch_idx (int): Integer displaying index of this batch.
+        Returns:
+            loss tensor
+        """
+        acts = batch["actions"] if self.act_cond else None
+        stts = None
+        p = 0.0
+        out = self(batch["rgb_obs"], acts, stts, p)
+        losses = self.loss(batch, out)
+        self.log_loss(losses, mode="test")
+        return {"loss": losses["loss_total"], "out": out}
+
     @rank_zero_only
     def on_train_epoch_start(self) -> None:
         logger.info(f"Start training epoch {self.current_epoch}")

@@ -115,40 +115,41 @@ def create_resume_script(slurm_cmd):
     os.chmod(file_path, st.st_mode | stat.S_IEXEC)
 
 
-# def create_eval_script():
-#     # Construct sbatch command
-#     eval_log_dir = log_dir / "evaluation"
-#     os.makedirs(eval_log_dir, exist_ok=True)
-#     eval_sbatch_script = Path("./sbatch_eval.sh").absolute()
-#     eval_file = args.train_file.parent / "evaluate.py"
-#
-#     eval_cmd = ["sbatch"]
-#     eval_job_opts = {
-#         "partition": args.partition,
-#         "mem": args.mem,
-#         "ntasks-per-node": 1,
-#         "cpus-per-task": 8,
-#         "gres": "gpu:1",
-#         "output": os.path.join(eval_log_dir, "%x.%N.%j.out"),
-#         "error": os.path.join(eval_log_dir, "%x.%N.%j.err"),
-#         "job-name": f"{args.job_name}_eval",
-#         "mail-type": "END,FAIL",
-#         "time": "1-00:00",
-#     }
-#     for key, value in eval_job_opts.items():
-#         eval_cmd.append(f"--{key}={value}")
-#     eval_args = f"{eval_sbatch_script.as_posix()} {args.venv} {eval_file.as_posix()}"
-#     eval_args += f" --train_folder {log_dir}"
-#     eval_args += " ${@:1}"
-#     eval_cmd.append(eval_args)
-#
-#     file_path = os.path.join(log_dir, "evaluate.sh")
-#     with open(file_path, "w") as file:
-#         file.write("#!/bin/bash\n")
-#         file.write(" ".join(eval_cmd))
-#     st = os.stat(file_path)
-#     os.chmod(file_path, st.st_mode | stat.S_IEXEC)
+def create_eval_script():
+    # Construct sbatch command
+    eval_log_dir = log_dir / "evaluation"
+    os.makedirs(eval_log_dir, exist_ok=True)
+    eval_sbatch_script = Path("./sbatch_eval.sh").absolute()
+    eval_file = args.train_file.parent / "evaluate.py"
+
+    eval_cmd = ["sbatch"]
+    eval_job_opts = {
+        "script": f"{eval_sbatch_script.as_posix()} {args.venv} {eval_file.as_posix()} {log_dir.as_posix()} {args.gpus} {' '.join(unknownargs)}",
+        "partition": args.partition,
+        "mem": args.mem,
+        "ntasks-per-node": str(1),
+        "cpus-per-task": str(args.gpus * 8),
+        "gres": f"gpu:{args.gpus}",
+        "nodes": str(1),
+        "output": os.path.join(eval_log_dir, "%x.%N.%j.out"),
+        "error": os.path.join(eval_log_dir, "%x.%N.%j.err"),
+        "job-name": f"{args.job_name}_eval",
+        "mail-type": "END,FAIL",
+        "time": "1-00:00",
+    }
+    for key, value in eval_job_opts.items():
+        if key == "script":
+            continue
+        eval_cmd.append(f"--{key}={value}")
+    eval_cmd.append(eval_job_opts["script"])
+
+    file_path = os.path.join(log_dir, "evaluate.sh")
+    with open(file_path, "w") as file:
+        file.write("#!/bin/bash\n")
+        file.write(" ".join(eval_cmd))
+    st = os.stat(file_path)
+    os.chmod(file_path, st.st_mode | stat.S_IEXEC)
 
 
 submit_job(job_opts)
-# create_eval_script()
+create_eval_script()

@@ -15,7 +15,6 @@ from pytorch_lightning import Callback, LightningModule, seed_everything, Traine
 from pytorch_lightning.loggers import LightningLoggerBase
 from pytorch_lightning.utilities import rank_zero_only
 from t3vip.utils.utils import get_git_commit_hash, print_system_env_info, get_last_checkpoint, get_model_via_name
-from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 from t3vip.datasets.utils.load_utils import get_intrinsics
 
 logger = logging.getLogger(__name__)
@@ -68,7 +67,7 @@ def setup_callbacks(callbacks_cfg: DictConfig) -> List[Callback]:
     return callbacks
 
 
-def setup_logger(cfg: DictConfig, model: LightningModule, name: str) -> LightningLoggerBase:
+def setup_logger(cfg: DictConfig, model: LightningModule, name: str, evaluate: bool = False) -> LightningLoggerBase:
     """
     Set up the logger (tensorboard or wandb) from hydra config.
     Args:
@@ -85,6 +84,9 @@ def setup_logger(cfg: DictConfig, model: LightningModule, name: str) -> Lightnin
         cfg.logger.name = path_date + "/" + path_time
     else:
         cfg.logger.name = name
+
+    if evaluate:
+        cfg.logger.name += "_eval"
 
     if cfg.logger["_target_"].split(".")[-1] == "WandbLogger":
         if hasattr(cfg, "ray"):

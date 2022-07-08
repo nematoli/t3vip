@@ -14,6 +14,7 @@ alpha_knn: 0.00307535
 alpha_sfs: 0.0028537
 alpha_ofs: 0.0020718
 alpha_kl: 0.0
+alpha_l: 2
 min_dpt: ${datamodule.dataset.min_dpt}
 max_dpt: ${datamodule.dataset.max_dpt}
 time_invariant: false

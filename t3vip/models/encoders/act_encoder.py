@@ -19,7 +19,7 @@ class ActEnc(nn.Module):
         dims: List[int],
         dim_action: int,
         dim_state: int,
-        dim_latent: int,
+        dim_latent: bool,
         norm: str,
         activation: str,
     ):
@@ -29,7 +29,7 @@ class ActEnc(nn.Module):
         self.dims = dims
         self.dim_action = dim_action
         self.dim_state = dim_state
-        self.dim_latent = dim_latent
+        self.dim_latent = 1 if dim_latent else 0
         self.norm = norm
         self.activation = activation
         self.dim_action_state = dim_action + dim_state

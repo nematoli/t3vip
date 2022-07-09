@@ -2,6 +2,8 @@ import torch
 import torch.nn.functional as F
 from t3vip.helpers.KNN import KNN
 from t3vip.utils.cam_utils import batch_seq_view, motion_smoothness
+from t3vip.utils.distributions import State
+import torch.distributions as D
 
 knn = KNN(search=15)
 
@@ -71,3 +73,19 @@ def calc_2d_loss(alpha_rcr, alpha_ofs, alpha_l, rgb_1, rgb_2, nxtrgbs, oflow):
         ofs_loss = smooth_loss(alpha_ofs, rgb_1, oflow)
 
     return rcr_loss, ofs_loss
+
+
+def calc_kl_loss(alpha_kl, dist, prior_state: State, postr_state: State) -> torch.Tensor:
+    """
+    Args:
+        pp_state: Namedtuple containing the parameters of the distribution produced by plan proposal network.
+        pr_state: Namedtuple containing the parameters of the distribution produced by plan recognition network.
+    Returns:
+        Scaled KL loss.
+    """
+    prior_dist = dist.get_dist(prior_state)  # prior
+    postr_dist = dist.get_dist(postr_state)  # posterior
+
+    kl_loss = alpha_kl * D.kl_divergence(postr_dist, dist.get_dist(dist.detach_state(prior_state))).mean()
+
+    return kl_loss

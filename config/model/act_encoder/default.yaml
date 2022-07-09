@@ -3,6 +3,6 @@ chn: ${model.obs_encoder.chn}
 dims: ${model.obs_encoder.dims}
 dim_action: ${datamodule.dataset.dim_action}
 dim_state: ${datamodule.dataset.dim_state}
-dim_latent: 0
+dim_latent: ${model.stochastic}
 norm: ${model.obs_encoder.norm}
 activation: ${model.obs_encoder.activation}

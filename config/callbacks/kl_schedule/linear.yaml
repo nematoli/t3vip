@@ -1,0 +1,4 @@
+_target_: t3vip.utils.kl_callbacks.KLLinearSchedule
+start_iteration: 100000
+end_iteration: 120000
+max_kl_beta: ${loss.alpha_kl}

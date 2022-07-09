@@ -1,6 +1,8 @@
 defaults:
   - act_encoder: default
   - msk_decoder: default
+  - distribution: continuous
+  - inference_net: default
   - optimizer: adam
   - lr_scheduler: none
 
@@ -8,4 +10,5 @@ intrinsics: ???
 xygrid: ???
 act_cond: true
 num_context_frames: 2
-prediction_horizon: 10
+time_invariant: false
+gen_iters: 100000

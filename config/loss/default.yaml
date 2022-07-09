@@ -7,7 +7,7 @@ alpha_knn:          1.0
 alpha_sfs:          1.0
 
 # klLoss
-alpha_kl:           0.0
+alpha_kl:           0.001
 
 # L1/L2
 alpha_l: 2

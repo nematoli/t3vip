@@ -1,3 +1,4 @@
 defaults:
   - checkpoint: default
+  - kl_schedule: linear
   - plot: default

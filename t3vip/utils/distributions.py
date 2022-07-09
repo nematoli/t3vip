@@ -20,6 +20,23 @@ class Distribution:
             self.category_size = kwargs.get("category_size")
             self.class_size = kwargs.get("class_size")
 
+    def set_unit_dist(self, dim_latent):
+        assert self.dist == "continuous"
+        mean = torch.zeros(1, 1, dim_latent, dim_latent)
+        std = torch.ones(1, 1, dim_latent, dim_latent)
+        state = ContState(mean, std)
+        return state
+
+    def repeat_to_device(self, state, device, B, S=None):
+        if S is None:
+            mean = state.mean.repeat(B, 1, 1, 1).to(device)
+            std = state.std.repeat(B, 1, 1, 1).to(device)
+        else:
+            mean = state.mean.unsqueeze(1).repeat(B, S, 1, 1, 1).to(device)
+            std = state.std.unsqueeze(1).repeat(B, S, 1, 1, 1).to(device)
+        state = ContState(mean, std)
+        return state
+
     def get_dist(self, state):
         if self.dist == "discrete":
             shape = state.logit.shape
@@ -34,11 +51,11 @@ class Distribution:
         elif self.dist == "continuous":
             return ContState(state.mean.detach(), state.std.detach())
 
-    def sample_latent_plan(self, distribution):
-        sampled_plan = distribution.sample()
+    def sample_latent_code(self, distribution):
+        sampled_code = distribution.sample()
         if self.dist == "discrete":
-            sampled_plan = torch.flatten(sampled_plan, start_dim=-2, end_dim=-1)
-        return sampled_plan
+            sampled_code = torch.flatten(sampled_code, start_dim=-2, end_dim=-1)
+        return sampled_code
 
     def build_state(self, hidden_size, plan_features):
         fc_state = []

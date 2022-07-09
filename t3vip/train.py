@@ -31,8 +31,7 @@ def train(cfg: DictConfig) -> None:
     seed_everything(cfg.seed, workers=True)
     dataset_name = cfg.datamodule.dataset["_target_"].split(".")[-1]
     intrinsics, xygrid = get_intrinsics(cfg.datamodule, dataset_name)
-    seq_len = cfg.model.num_context_frames + cfg.model.prediction_horizon
-    datamodule = hydra.utils.instantiate(cfg.datamodule, intrinsics=intrinsics, xygrid=xygrid, seq_len=seq_len)
+    datamodule = hydra.utils.instantiate(cfg.datamodule, intrinsics=intrinsics, xygrid=xygrid)
     chk = get_last_checkpoint(Path.cwd())
 
     # Load Model

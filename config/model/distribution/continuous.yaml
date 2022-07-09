@@ -1,0 +1,2 @@
+_target_: t3vip.utils.distributions.Distribution
+dist: "continuous"

@@ -11,4 +11,4 @@ xygrid: ???
 act_cond: true
 num_context_frames: 2
 time_invariant: false
-gen_iters: 100000
+gen_iters: 50000

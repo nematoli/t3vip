@@ -1,0 +1,5 @@
+defaults:
+  - search_space@alphas: alphas_loguniform
+  - search_space@lr_scheduler: lr_scheduler
+  - search_space@optimizer: optimizer
+  - search_space@lr: lr

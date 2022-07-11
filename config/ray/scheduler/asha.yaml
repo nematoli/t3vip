@@ -1,0 +1,7 @@
+_target_: ray.tune.schedulers.ASHAScheduler
+time_attr:        training_iteration          #help='training result attr to use for comparing time, find the
+                                              #options in https://docs.ray.io/en/latest/tune/user-guide.html#tune-autofilled-metrics
+max_t:            9                           #help='Max time units per trial. Trials will be stopped after max_t time units'
+reduction_factor: 3                           #help='Used to set halving rate'
+grace_period:     3
+brackets:         1

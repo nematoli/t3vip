@@ -1,0 +1,5 @@
+max_report_frequency:         300
+print_intermediate_tables:    True
+sort_by_metric:               True
+# Parameter reference:
+# https://docs.ray.io/en/latest/tune/api_docs/reporters.html#clireporter

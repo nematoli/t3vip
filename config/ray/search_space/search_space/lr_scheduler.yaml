@@ -1,0 +1,4 @@
+- name: lr_scheduler
+  function: choice
+  input:
+    categories: [Null, "torch.optim.lr_scheduler.CosineAnnealingLR"]

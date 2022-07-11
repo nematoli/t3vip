@@ -1,0 +1,4 @@
+defaults:
+  - search_space@alphas: alphas_loguniform
+  - search_space@alpha_l: alpha_loss
+  - search_space@lr: lr

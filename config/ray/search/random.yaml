@@ -1,0 +1,2 @@
+_target_: ray.tune.suggest.basic_variant.BasicVariantGenerator
+max_concurrent: 8

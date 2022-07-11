@@ -1,0 +1,16 @@
+defaults:
+  - reporter: default
+  - scheduler: asha
+  - search: random
+  - search_space: lr_and_alphas
+  - _self_
+
+name: asha_random
+use_concurrency_limiter: False
+
+num_samples:       70                 #help='number of configurations to sample'
+gpus_per_trial:    1                  #help='number of gpus per sample'
+cpus_per_trial:    8                  #help='number of cpus per sample'
+shared_directory:  ~/runs/ray_results #help='A directory that is accessible for all processes, e.g. an NFS share.'
+reports_per_epoch: 9                  #help='Number of times to validate and call tune.report() per epoch'
+opt_metric:        SPSNR

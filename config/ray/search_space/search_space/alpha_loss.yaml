@@ -1,0 +1,5 @@
+- name: alpha_l
+  function: choice
+  input:
+    categories: [1, 2]
+

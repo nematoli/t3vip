@@ -1,0 +1,10 @@
+- name: weight_decay
+  function: loguniform
+  input:
+    lower: 1e-6
+    upper: 1e-2
+- name: eps
+  function: loguniform
+  input:
+    lower: 1e-10
+    upper: 1e-4

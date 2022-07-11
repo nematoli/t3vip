@@ -1,0 +1,33 @@
+defaults:
+  - callbacks: default
+  - datamodule: calvin
+  - logger: wandb
+  - loss: default
+  - model: T3VIP
+  - ray: asha_random
+  - trainer: default
+  - _self_
+
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
+
+seed: 42
+log_dir: ../
+slurm: false
+
+hydra:
+  run:
+    dir: ${log_dir}/runs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: ${log_dir}/runs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.override_dirname}
+  job:
+    config:
+      override_dirname:
+        exclude_keys:
+          - log_dir
+          - datamodule.dataset.data_dir
+          - datamodule.dataset.num_workers
+          - trainer.gpus
+          - trainer.limit_val_batches
+

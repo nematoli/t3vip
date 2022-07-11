@@ -1,0 +1,25 @@
+- name: alpha_rcr
+  function: loguniform
+  input:
+    lower: 1e-3
+    upper: 1
+- name: alpha_ofs
+  function: loguniform
+  input:
+    lower: 1e-3
+    upper: 1
+- name: alpha_rcd
+  function: loguniform
+  input:
+    lower: 1e-3
+    upper: 1
+- name: alpha_knn
+  function: loguniform
+  input:
+    lower: 1e-3
+    upper: 1
+- name: alpha_sfs
+  function: loguniform
+  input:
+    lower: 1e-3
+    upper: 1

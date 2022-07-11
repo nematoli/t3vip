@@ -1,0 +1,5 @@
+- name: lr
+  function: loguniform
+  input:
+    lower: 3e-5
+    upper: 1e-3

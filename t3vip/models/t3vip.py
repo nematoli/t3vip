@@ -11,7 +11,8 @@ from t3vip.utils.cam_utils import get2Dflow, get_prj_mat
 from t3vip.datasets.utils.load_utils import get_ptc_from_dpt
 from t3vip.helpers import softsplat
 from t3vip.utils.transforms import RealDepthTensor, ScaleDepthTensor
-from t3vip.helpers.losses import calc_3d_loss, calc_2d_loss
+from t3vip.helpers.losses import calc_3d_loss, calc_2d_loss, calc_kl_loss
+from t3vip.utils.distributions import ContState
 
 logger = logging.getLogger(__name__)
 
@@ -42,13 +43,14 @@ class T3VIP(pl.LightningModule):
         msk_decoder: DictConfig,
         se3_decoder: DictConfig,
         rgbd_inpainter: DictConfig,
+        inference_net: DictConfig,
+        distribution: DictConfig,
         optimizer: DictConfig,
         lr_scheduler: DictConfig,
         intrinsics: Dict,
         xygrid: torch.Tensor,
         act_cond: bool,
         num_context_frames: int,
-        prediction_horizon: int,
         splat: str,
         alpha_rcr: float,
         alpha_rcd: float,
@@ -60,6 +62,8 @@ class T3VIP(pl.LightningModule):
         min_dpt: float,
         max_dpt: float,
         time_invariant: bool,
+        stochastic: bool,
+        gen_iters: int,
     ):
         super(T3VIP, self).__init__()
         self.obs_encoder = hydra.utils.instantiate(obs_encoder)
@@ -67,13 +71,14 @@ class T3VIP(pl.LightningModule):
         self.msk_decoder = hydra.utils.instantiate(msk_decoder)
         self.se3_decoder = hydra.utils.instantiate(se3_decoder)
         self.rgbd_inpainter = hydra.utils.instantiate(rgbd_inpainter)
+        self.inference_net = hydra.utils.instantiate(inference_net)
+        self.dist = hydra.utils.instantiate(distribution)
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
         self.prj_mat = get_prj_mat(intrinsics)
         self.xygrid = torch.unsqueeze(xygrid, dim=0)
         self.act_cond = act_cond
         self.num_context_frames = num_context_frames
-        self.prediction_horizon = prediction_horizon
         self.splat = splat
         self.alpha_rcr = alpha_rcr
         self.alpha_rcd = alpha_rcd
@@ -87,6 +92,10 @@ class T3VIP(pl.LightningModule):
         self.time_invariant = time_invariant
         self.scale_dpt = ScaleDepthTensor(self.min_dpt, self.max_dpt)
         self.real_dpt = RealDepthTensor(self.min_dpt, self.max_dpt)
+        self.stochastic = stochastic
+        self.gen_iters = gen_iters
+        if self.stochastic:
+            self.prior = self.dist.set_unit_dist(self.inference_net.dim_latent)
         self.intrinsics = intrinsics
         self.save_hyperparameters()
 
@@ -113,8 +122,12 @@ class T3VIP(pl.LightningModule):
         B, S, C, H, W = rgbs.size()
         latent = None
         lstm_states = None
-        rgbs_complete = None
-        dpts_complete = None
+        rgb_complete = None
+        dpt_complete = None
+
+        if inference:
+            rgb_complete = rgbs
+            dpt_complete = dpts
 
         outputs_cell = {}
         outputs = {
@@ -150,8 +163,8 @@ class T3VIP(pl.LightningModule):
                 dpt_t,
                 act_t,
                 stt_t,
-                rgbs_complete,
-                dpts_complete,
+                rgb_complete,
+                dpt_complete,
                 latent,
                 lstm_states,
             )
@@ -190,6 +203,19 @@ class T3VIP(pl.LightningModule):
             lstm_states = [None] * 9
             obs_lstms, act_lstms, msk_lstms, inp_lstms = (None, None, None, None)
 
+        if self.stochastic:
+            prior = self.dist.repeat_to_device(self.prior, rgb_t.device, rgb_t.size(0))
+            latent_dist = self.dist.get_dist(prior)
+            latent_state = prior
+
+            if latent is None:
+                # infer posterior distribution q(z|x)
+                if rgb_complete is not None:
+                    posterior = self.inference_net(rgb_complete, dpt_complete)
+                    latent_dist = self.dist.get_dist(posterior)
+                    latent_state = posterior
+                latent = self.dist.sample_latent_code(latent_dist).to(act_t.device)
+
         rgbd_t = torch.cat([rgb_t, self.scale_dpt(dpt_t)], dim=1)
         emb_t, obs_lstms = self.obs_encoder(rgbd_t, obs_lstms)
         emb_ta, act_lstms = self.act_encoder(emb_t[-1], act_t, stt_t, latent, act_lstms)
@@ -226,6 +252,9 @@ class T3VIP(pl.LightningModule):
             "nxtrgb": nxt_rgb,
             "nxtdpt": nxt_dpt,
         }
+        if self.stochastic:
+            outputs["mu_t"] = latent_state.mean
+            outputs["std_t"] = latent_state.std
 
         return outputs, latent, lstm_states
 
@@ -245,8 +274,8 @@ class T3VIP(pl.LightningModule):
 
         acts = batch["actions"] if self.act_cond else None
         stts = None
+        inference = True if self.stochastic and self.global_step > self.gen_iters else False
         p = 1.0
-        inference = False
 
         out = self(batch["depth_obs"], batch["rgb_obs"], acts, stts, p, inference)
         losses = self.loss(batch, out)
@@ -344,6 +373,13 @@ class T3VIP(pl.LightningModule):
         )
         loss_2d = rcr_loss + ofs_loss
 
+        if self.stochastic:
+            prior = self.dist.repeat_to_device(
+                self.prior, outputs["mu_t"].device, outputs["mu_t"].size(0), outputs["mu_t"].size(1)
+            )
+            posterior = ContState(outputs["mu_t"], outputs["std_t"])
+            loss_kl = calc_kl_loss(self.alpha_kl, self.dist, prior, posterior)
+
         total_loss = loss_3d + loss_2d + loss_kl
 
         losses = {
@@ -360,6 +396,10 @@ class T3VIP(pl.LightningModule):
 
         return losses
 
+    def set_kl_beta(self, alpha_kl):
+        """Set alpha_kl from Callback"""
+        self.alpha_kl = alpha_kl
+
     def log_loss(
         self,
         loss: Dict[str, torch.Tensor],
@@ -372,5 +412,4 @@ class T3VIP(pl.LightningModule):
                 self.log(
                     info[0] + "/{}_".format(mode) + info[1],
                     loss[key],
-                    # batch_size=batch_size,
                 )

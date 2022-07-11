@@ -3,11 +3,13 @@ defaults:
   - obs_encoder: rgbd
   - se3_decoder: default
   - rgbd_inpainter: default
+  - inference_net: default
 
 _target_: t3vip.models.t3vip.T3VIP
 _recursive_: false
 
 splat: average
+stochastic: true
 alpha_rcr: 0.65910719
 alpha_rcd: 0.1645335
 alpha_knn: 0.00307535

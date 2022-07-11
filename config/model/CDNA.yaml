@@ -2,12 +2,13 @@ defaults:
   - setup
   - obs_encoder: rgb
   - knl_decoder: default
+  - inference_net: none
 
-_target_: t3vip.models.cdna.CDNA
+_target_: t3vip.models.sv2p.SV2P
 _recursive_: false
 
+stochastic: false
 alpha_rcr: ${loss.alpha_rcr}
 alpha_kl: 0
 alpha_l: ${loss.alpha_l}
 reuse_first_rgb: false
-stochastic: false

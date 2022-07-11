@@ -8,12 +8,9 @@ from pytorch_lightning.utilities import rank_zero_only
 
 from t3vip.utils.net_utils import gen_nxtrgb, scheduled_sampling
 from t3vip.helpers.losses import calc_2d_loss, calc_kl_loss
+from t3vip.utils.distributions import ContState
 
 logger = logging.getLogger(__name__)
-
-from collections import namedtuple
-
-ContState = namedtuple("ContState", ["mean", "std"])
 
 
 @rank_zero_only
@@ -22,7 +19,7 @@ def log_rank_0(*args, **kwargs):
     logger.info(*args, **kwargs)
 
 
-class CDNA(pl.LightningModule):
+class SV2P(pl.LightningModule):
     """
     The lightning module used for training self-supervised t3vip.
     Args:
@@ -40,8 +37,8 @@ class CDNA(pl.LightningModule):
         obs_encoder: DictConfig,
         act_encoder: DictConfig,
         msk_decoder: DictConfig,
-        inference_net: DictConfig,
         knl_decoder: DictConfig,
+        inference_net: DictConfig,
         distribution: DictConfig,
         optimizer: DictConfig,
         lr_scheduler: DictConfig,
@@ -57,7 +54,7 @@ class CDNA(pl.LightningModule):
         stochastic: bool,
         gen_iters: int,
     ):
-        super(CDNA, self).__init__()
+        super(SV2P, self).__init__()
         self.obs_encoder = hydra.utils.instantiate(obs_encoder)
         self.act_encoder = hydra.utils.instantiate(act_encoder)
         self.msk_decoder = hydra.utils.instantiate(msk_decoder)
@@ -77,7 +74,8 @@ class CDNA(pl.LightningModule):
         self.time_invariant = time_invariant
         self.stochastic = stochastic
         self.gen_iters = gen_iters
-        self.prior = self.dist.set_unit_dist(self.inference_net.dim_latent)
+        if self.stochastic:
+            self.prior = self.dist.set_unit_dist(self.inference_net.dim_latent)
         self.save_hyperparameters()
 
     def configure_optimizers(self):
@@ -115,8 +113,6 @@ class CDNA(pl.LightningModule):
 
         outputs_cell = {}
         outputs = {
-            "mu_t": [],
-            "std_t": [],
             "emb_t": [],
             "masks_t": [],
             "nxtrgb": [],
@@ -167,17 +163,6 @@ class CDNA(pl.LightningModule):
         latent: torch.Tensor,
         lstm_states: List[torch.Tensor],
     ):
-        prior = self.dist.repeat_to_device(self.prior, rgb_t.device, rgb_t.size(0))
-        dist = self.dist.get_dist(prior)
-        state = prior
-
-        if latent is None and self.stochastic:
-            # infer posterior distribution q(z|x)
-            if rgb_complete is not None:
-                posterior = self.inference_net(rgb_complete)
-                dist = self.dist.get_dist(posterior)
-                state = posterior
-            latent = self.dist.sample_latent_code(dist).to(act_t.device)
 
         if lstm_states is not None:
             obs_lstms = lstm_states[0:4]
@@ -186,6 +171,19 @@ class CDNA(pl.LightningModule):
         else:
             lstm_states = [None] * 7
             obs_lstms, act_lstms, msk_lstms = (None, None, None)
+
+        if self.stochastic:
+            prior = self.dist.repeat_to_device(self.prior, rgb_t.device, rgb_t.size(0))
+            latent_dist = self.dist.get_dist(prior)
+            latent_state = prior
+
+            if latent is None:
+                # infer posterior distribution q(z|x)
+                if rgb_complete is not None:
+                    posterior = self.inference_net(rgb_complete)
+                    latent_dist = self.dist.get_dist(posterior)
+                    latent_state = posterior
+                latent = self.dist.sample_latent_code(latent_dist).to(act_t.device)
 
         emb_t, obs_lstms = self.obs_encoder(rgb_t, obs_lstms)
         emb_ta, act_lstms = self.act_encoder(emb_t[-1], act_t, stt_t, latent, act_lstms)
@@ -198,12 +196,13 @@ class CDNA(pl.LightningModule):
         nxt_rgb = gen_nxtrgb(rgb_t, masks_t, tfmrgb_t, rgb_extra)
 
         outputs = {
-            "mu_t": state.mean,
-            "std_t": state.std,
             "emb_t": emb_t[-1],
             "masks_t": masks_t,
             "nxtrgb": nxt_rgb,
         }
+        if self.stochastic:
+            outputs["mu_t"] = latent_state.mean
+            outputs["std_t"] = latent_state.std
 
         return outputs, latent, lstm_states
 
@@ -302,16 +301,16 @@ class CDNA(pl.LightningModule):
                 self.prior, outputs["mu_t"].device, outputs["mu_t"].size(0), outputs["mu_t"].size(1)
             )
             posterior = ContState(outputs["mu_t"], outputs["std_t"])
-            kl_loss = calc_kl_loss(self.alpha_kl, self.dist, prior, posterior)
+            loss_kl = calc_kl_loss(self.alpha_kl, self.dist, prior, posterior)
         else:
-            kl_loss = torch.tensor(0.0).to(rgb_1.device)
+            loss_kl = torch.tensor(0.0).to(self.device)
 
-        total_loss = rcr_loss + kl_loss
+        total_loss = rcr_loss + loss_kl
 
         losses = {
             "loss_total": total_loss,
             "loss2d_rgbrcs": rcr_loss,
-            "loss_kl": kl_loss,
+            "loss_kl": loss_kl,
         }
 
         return losses
@@ -332,5 +331,4 @@ class CDNA(pl.LightningModule):
                 self.log(
                     info[0] + "/{}_".format(mode) + info[1],
                     loss[key],
-                    # batch_size=batch_size,
                 )

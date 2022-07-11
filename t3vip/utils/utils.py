@@ -9,9 +9,7 @@ from pytorch_lightning.utilities.cloud_io import load as pl_load
 import torch
 import tqdm
 import t3vip.models.t3vip as m_t3vip
-
-# import t3vip.models.sv2p as m_sv2p
-import t3vip.models.cdna as m_cdna
+import t3vip.models.sv2p as m_sv2p
 
 
 def get_git_commit_hash(repo_path: Path) -> str:
@@ -92,10 +90,8 @@ def nice_print(details: Dict, level: int = 0) -> List:
 def get_model_via_name(model_name):
     if model_name == "T3VIP":
         models_m = m_t3vip
-    # elif model_name == "SV2P":
-    #     models_m = m_sv2p
-    elif model_name == "CDNA":
-        models_m = m_cdna
+    elif model_name == "SV2P":
+        models_m = m_sv2p
     else:
         raise ValueError
 

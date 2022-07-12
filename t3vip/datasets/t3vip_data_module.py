@@ -37,7 +37,7 @@ class T3VIPDataModule(pl.LightningDataModule):
             root_data_path = Path(t3vip.__file__).parent / root_data_path
 
         dataset_name = self.dataset["_target_"].split(".")[-1]
-        if dataset_name == "CalvinDataset":
+        if "calvin" in dataset_name.lower():
             if self.dataset.env != "env_d":
                 self.train_dir = self.val_dir = root_data_path / "task_ABC_D" / "training"
             else:

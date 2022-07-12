@@ -78,7 +78,7 @@ def read_calvin_intrinsics(filename):
 
 def get_intrinsics(cfg, dataset_name):
     load_dir = Path(cfg.dataset.data_dir).expanduser()
-    if dataset_name == "CalvinDataset":
+    if "calvin" in dataset_name.lower():
 
         if cfg.dataset.env != "env_d":
             yaml_file = load_dir / "task_ABC_D" / "validation" / ".hydra" / "merged_config.yaml"

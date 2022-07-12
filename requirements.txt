@@ -2,6 +2,7 @@ hydra-core
 hydra-colorlog
 torch
 torchvision
+torchmetrics
 cupy-cuda102
 pytorch3d
 pytorch-lightning

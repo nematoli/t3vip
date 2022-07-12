@@ -7,7 +7,6 @@ from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 import wandb
 from t3vip.utils.cam_utils import flow_to_rgb
 import numpy as np
-from t3vip.helpers import metrics
 
 
 class PlotCallback(pl.Callback):
@@ -89,25 +88,11 @@ class PlotCallback(pl.Callback):
         else:
             raise ValueError
 
-    @torch.no_grad()
-    def log_metrics(self, pl_module, batch, outputs, on_step=False, on_epoch=False, mode="train"):
-        psnr_avg, ssim_avg = metrics.compute_frame_metrics(
-            batch["rgb_obs"].to(outputs["nxtrgb"].device),
-            outputs["nxtrgb"],
-        )
-
-        pl_module.log("metrics/{}-PSNR".format(mode), psnr_avg, on_step=on_step, on_epoch=on_epoch)
-        pl_module.log("metrics/{}-SSIM".format(mode), ssim_avg, on_step=on_step, on_epoch=on_epoch)
-        # pl_module.log("metrics/{}-VGG".format(mode), vgg_avg, on_step=on_step, on_epoch=on_epoch)
-
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, **kwargs):
         self.log_images(pl_module, batch, outputs["out"], mode="train")
-        self.log_metrics(pl_module, batch, outputs["out"], on_step=True, on_epoch=False, mode="train")
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         self.log_images(pl_module, batch, outputs["out"], mode="val")
-        self.log_metrics(pl_module, batch, outputs["out"], on_step=False, on_epoch=True, mode="val")
 
     def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         self.log_images(pl_module, batch, outputs["out"], mode="test")
-        self.log_metrics(pl_module, batch, outputs["out"], on_step=False, on_epoch=True, mode="test")

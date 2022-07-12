@@ -9,6 +9,10 @@ from pytorch_lightning.utilities import rank_zero_only
 from t3vip.utils.net_utils import gen_nxtrgb, scheduled_sampling
 from t3vip.helpers.losses import calc_2d_loss, calc_kl_loss
 from t3vip.utils.distributions import ContState
+from t3vip.utils.cam_utils import batch_seq_view
+from torchmetrics.functional import peak_signal_noise_ratio as PSNR
+from torchmetrics.functional import structural_similarity_index_measure as SSIM
+from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +80,7 @@ class SV2P(pl.LightningModule):
         self.gen_iters = gen_iters
         if self.stochastic:
             self.prior = self.dist.set_unit_dist(self.inference_net.dim_latent)
+        self.lpips = LPIPS(net_type="vgg").to(self.device)
         self.save_hyperparameters()
 
     def configure_optimizers(self):
@@ -228,6 +233,7 @@ class SV2P(pl.LightningModule):
         out = self(batch["rgb_obs"], acts, stts, inference, p)
         losses = self.loss(batch, out)
         self.log_loss(losses, mode="train")
+        self.log_metrics(batch, out, mode="train", on_step=True, on_epoch=False)
         return {"loss": losses["loss_total"], "out": out}
 
     def validation_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Dict[str, Union[torch.Tensor, Any]]:
@@ -250,6 +256,7 @@ class SV2P(pl.LightningModule):
         out = self(batch["rgb_obs"], acts, stts, inference, p)
         losses = self.loss(batch, out)
         self.log_loss(losses, mode="val")
+        self.log_metrics(batch, out, mode="val", on_step=True, on_epoch=False)
         return {"loss": losses["loss_total"], "out": out}
 
     def test_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Dict[str, Union[torch.Tensor, Any]]:
@@ -315,6 +322,22 @@ class SV2P(pl.LightningModule):
 
         return losses
 
+    @torch.no_grad()
+    def log_metrics(
+        self, batch: Dict[str, torch.Tensor], outputs: Dict[str, torch.Tensor], mode: str, on_step: bool, on_epoch: bool
+    ):
+        true_img, pred_img = batch_seq_view(batch["rgb_obs"][:, 1:]), batch_seq_view(outputs["nxtrgb"])
+
+        ssim = SSIM(pred_img, true_img)
+        ipsnr = PSNR(pred_img, true_img)
+        pred_img = torch.clamp((pred_img - 0.5) * 2, min=-1, max=1)
+        true_img = torch.clamp((true_img - 0.5) * 2, min=-1, max=1)
+        lpips = 1 - self.lpips(pred_img, true_img)
+
+        self.log("metrics/{}_VGG".format(mode), lpips, on_step=on_step, on_epoch=on_epoch)
+        self.log("metrics/{}_SSIM".format(mode), ssim, on_step=on_step, on_epoch=on_epoch)
+        self.log("metrics/{}_IPSNR".format(mode), ipsnr, on_step=on_step, on_epoch=on_epoch)
+
     def set_kl_beta(self, alpha_kl):
         """Set alpha_kl from Callback"""
         self.alpha_kl = alpha_kl
@@ -328,7 +351,4 @@ class SV2P(pl.LightningModule):
         for key, val in loss.items():
             if loss[key] != 0:
                 info = key.split("_")
-                self.log(
-                    info[0] + "/{}_".format(mode) + info[1],
-                    loss[key],
-                )
+                self.log(info[0] + "/{}_".format(mode) + info[1], loss[key])

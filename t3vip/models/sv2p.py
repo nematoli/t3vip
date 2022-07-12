@@ -334,9 +334,9 @@ class SV2P(pl.LightningModule):
         true_img = torch.clamp((true_img - 0.5) * 2, min=-1, max=1)
         lpips = 1 - self.lpips(pred_img, true_img)
 
-        self.log("metrics/{}_VGG".format(mode), lpips, on_step=on_step, on_epoch=on_epoch)
-        self.log("metrics/{}_SSIM".format(mode), ssim, on_step=on_step, on_epoch=on_epoch)
-        self.log("metrics/{}_IPSNR".format(mode), ipsnr, on_step=on_step, on_epoch=on_epoch)
+        self.log("metrics/{}-VGG".format(mode), lpips, on_step=on_step, on_epoch=on_epoch)
+        self.log("metrics/{}-SSIM".format(mode), ssim, on_step=on_step, on_epoch=on_epoch)
+        self.log("metrics/{}-IPSNR".format(mode), ipsnr, on_step=on_step, on_epoch=on_epoch)
 
     def set_kl_beta(self, alpha_kl):
         """Set alpha_kl from Callback"""

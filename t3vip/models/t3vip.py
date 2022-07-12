@@ -423,12 +423,12 @@ class T3VIP(pl.LightningModule):
         lpips = 1 - self.lpips(pred_img, true_img)
         rmse = RMSE(pred_dpt, true_dpt, squared=False)
 
-        self.log("metrics/{}_VGG".format(mode), lpips, on_step=on_step, on_epoch=on_epoch)
-        self.log("metrics/{}_SSIM".format(mode), ssim, on_step=on_step, on_epoch=on_epoch)
-        self.log("metrics/{}_IPSNR".format(mode), ipsnr, on_step=on_step, on_epoch=on_epoch)
-        self.log("metrics/{}_DPSNR".format(mode), dpsnr, on_step=on_step, on_epoch=on_epoch)
-        self.log("metrics/{}_SPSNR".format(mode), spsnr, on_step=on_step, on_epoch=on_epoch)
-        self.log("metrics/{}_RMSE".format(mode), rmse, on_step=on_step, on_epoch=on_epoch)
+        self.log("metrics/{}-VGG".format(mode), lpips, on_step=on_step, on_epoch=on_epoch)
+        self.log("metrics/{}-SSIM".format(mode), ssim, on_step=on_step, on_epoch=on_epoch)
+        self.log("metrics/{}-IPSNR".format(mode), ipsnr, on_step=on_step, on_epoch=on_epoch)
+        self.log("metrics/{}-DPSNR".format(mode), dpsnr, on_step=on_step, on_epoch=on_epoch)
+        self.log("metrics/{}-SPSNR".format(mode), spsnr, on_step=on_step, on_epoch=on_epoch)
+        self.log("metrics/{}-RMSE".format(mode), rmse, on_step=on_step, on_epoch=on_epoch)
 
     def set_kl_beta(self, alpha_kl):
         """Set alpha_kl from Callback"""

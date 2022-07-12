@@ -44,13 +44,13 @@ def train_t3vip(config: dict = {}, cfg: DictConfig = {}, budget: int = 10, num_g
     dataset_name = cfg.datamodule.dataset["_target_"].split(".")[-1]
     intrinsics, xygrid = get_intrinsics(cfg.datamodule, dataset_name)
     datamodule = hydra.utils.instantiate(cfg.datamodule, intrinsics=intrinsics, xygrid=xygrid)
+    datamodule.setup(stage="fit")
 
     cfg.model = overwrite_model_cfg(model_cfg=cfg.model, sampled_cfg=config)
     model = hydra.utils.instantiate(cfg.model, intrinsics=intrinsics, xygrid=xygrid)
 
     cfg.trainer.gpus = math.ceil(num_gpus)
-    # This line is not working
-    num_batches_per_epoch = len(datamodule["train_loader"])
+    num_batches_per_epoch = len(datamodule.train_dataset)
     cfg.trainer.val_check_interval = int(num_batches_per_epoch / cfg.ray.reports_per_epoch)
     cfg.trainer.max_steps = budget * cfg.trainer.val_check_interval + 1
 
@@ -58,8 +58,7 @@ def train_t3vip(config: dict = {}, cfg: DictConfig = {}, budget: int = 10, num_g
     log_rank_0(print_system_env_info())
     train_logger = setup_logger(cfg, model, tune.get_trial_id())
     callbacks = setup_callbacks(cfg.callbacks)
-
-    metrics = {"SPSNR": "metrics/val-SPSNR"}
+    metrics = {"SPSNR": "metrics/val-SPSNR", "IPSNR": "metrics/val-IPSNR"}
     tc = TuneReportCheckpointCallback(metrics=metrics, filename="checkpoint", on="validation_end")
     callbacks.append(tc)
 
@@ -117,10 +116,7 @@ def ray_optim(cfg):
         trainable,
         name=cfg.ray.name,
         local_dir=cfg.ray.shared_directory,
-        resources_per_trial={
-            "cpu": cfg.ray.cpus_per_trial,
-            "gpu": cfg.ray.gpus_per_trial,
-        },
+        resources_per_trial={"cpu": cfg.ray.cpus_per_trial, "gpu": cfg.ray.gpus_per_trial},
         progress_reporter=progress_reporter,
         config=get_search_space(cfg.ray.search_space),
         scheduler=scheduler,
@@ -128,7 +124,7 @@ def ray_optim(cfg):
         num_samples=cfg.ray.num_samples,
         stop={time_attr: max_t},
         metric=cfg.ray.opt_metric,
-        mode="min",
+        mode="max",
         sync_config=tune.SyncConfig(syncer=None),  # Disable syncing
         resume="AUTO",
     )

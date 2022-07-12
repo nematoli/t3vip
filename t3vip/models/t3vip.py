@@ -19,8 +19,6 @@ from torchmetrics.functional import structural_similarity_index_measure as SSIM
 from torchmetrics.functional import mean_squared_error as RMSE
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
 
-import time
-
 logger = logging.getLogger(__name__)
 
 
@@ -312,7 +310,7 @@ class T3VIP(pl.LightningModule):
         out = self(batch["depth_obs"], batch["rgb_obs"], acts, stts, p, inference)
         losses = self.loss(batch, out)
         self.log_loss(losses, mode="val")
-        self.log_metrics(batch, out, mode="val", on_step=True, on_epoch=False)
+        self.log_metrics(batch, out, mode="val", on_step=False, on_epoch=True)
         return {"loss": losses["loss_total"], "out": out}
 
     def test_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Dict[str, Union[torch.Tensor, Any]]:

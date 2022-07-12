@@ -1,0 +1,6 @@
+_target_: pytorch_lightning.callbacks.early_stopping.EarlyStopping
+monitor: val_loss
+patience: 100
+strict: false
+verbose: false
+mode: min

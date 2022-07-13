@@ -412,9 +412,9 @@ class T3VIP(pl.LightningModule):
         true_img, pred_img = batch_seq_view(batch["rgb_obs"][:, 1:]), batch_seq_view(outputs["nxtrgb"])
         true_dpt, pred_dpt = batch_seq_view(batch["depth_obs"][:, 1:]), batch_seq_view(outputs["nxtdpt"])
 
-        ssim = SSIM(pred_img, true_img)
-        ipsnr = PSNR(pred_img, true_img)
-        dpsnr = PSNR(pred_dpt, true_dpt)
+        ssim = SSIM(pred_img, true_img, data_range=1.0)
+        ipsnr = PSNR(pred_img, true_img, data_range=1.0)
+        dpsnr = PSNR(pred_dpt, true_dpt, data_range=(self.max_dpt - self.min_dpt))
         spsnr = ipsnr + dpsnr
         pred_img = torch.clamp((pred_img - 0.5) * 2, min=-1, max=1)
         true_img = torch.clamp((true_img - 0.5) * 2, min=-1, max=1)

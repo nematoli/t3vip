@@ -328,8 +328,8 @@ class SV2P(pl.LightningModule):
     ):
         true_img, pred_img = batch_seq_view(batch["rgb_obs"][:, 1:]), batch_seq_view(outputs["nxtrgb"])
 
-        ssim = SSIM(pred_img, true_img)
-        ipsnr = PSNR(pred_img, true_img)
+        ssim = SSIM(pred_img, true_img, data_range=1.0)
+        ipsnr = PSNR(pred_img, true_img, data_range=1.0)
         pred_img = torch.clamp((pred_img - 0.5) * 2, min=-1, max=1)
         true_img = torch.clamp((true_img - 0.5) * 2, min=-1, max=1)
         lpips = 1 - self.lpips(pred_img, true_img)

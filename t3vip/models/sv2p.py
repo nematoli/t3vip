@@ -256,7 +256,7 @@ class SV2P(pl.LightningModule):
         out = self(batch["rgb_obs"], acts, stts, inference, p)
         losses = self.loss(batch, out)
         self.log_loss(losses, mode="val")
-        self.log_metrics(batch, out, mode="val", on_step=True, on_epoch=False)
+        self.log_metrics(batch, out, mode="val", on_step=False, on_epoch=True)
         return {"loss": losses["loss_total"], "out": out}
 
     def test_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Dict[str, Union[torch.Tensor, Any]]:

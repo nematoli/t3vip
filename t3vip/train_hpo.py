@@ -50,7 +50,7 @@ def train_t3vip(config: dict = {}, cfg: DictConfig = {}, budget: int = 10, num_g
     model = hydra.utils.instantiate(cfg.model, intrinsics=intrinsics, xygrid=xygrid)
 
     cfg.trainer.gpus = math.ceil(num_gpus)
-    num_batches_per_epoch = len(datamodule.train_dataset)
+    num_batches_per_epoch = len(datamodule.train_dataloader())
     cfg.trainer.val_check_interval = int(num_batches_per_epoch / cfg.ray.reports_per_epoch)
     cfg.trainer.max_steps = budget * cfg.trainer.val_check_interval + 1
 

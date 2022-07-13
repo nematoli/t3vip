@@ -78,8 +78,8 @@ def setup_logger(cfg: DictConfig, model: LightningModule, name: str, evaluate: b
     cwd_path = Path.cwd()
     print("cwd_path", cwd_path)
     if cfg.slurm:
-        path_date = cwd_path.parts[4]
-        path_time = cwd_path.parts[5]
+        path_date = cwd_path.parts[5]
+        path_time = cwd_path.parts[6]
         cfg.logger.name = path_date + "/" + path_time
     else:
         cfg.logger.name = name
@@ -92,7 +92,7 @@ def setup_logger(cfg: DictConfig, model: LightningModule, name: str, evaluate: b
             cfg.logger.group = cfg.ray.name
             cfg.logger.name = name
         else:
-            cfg.logger.group = cwd_path.parts[4]
+            cfg.logger.group = cwd_path.parts[5]
         cfg.logger.id = cfg.logger.name.replace("/", "_")
 
     train_logger = hydra.utils.instantiate(cfg.logger)

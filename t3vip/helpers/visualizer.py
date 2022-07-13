@@ -22,7 +22,9 @@ class PlotCallback(pl.Callback):
 
     @torch.no_grad()
     def log_images(self, pl_module, batch, outputs, mode="train"):
-        if (not self.vis_imgs) or pl_module.global_step % self.vis_freq != 0:
+        # if (not self.vis_imgs) or pl_module.global_step % self.vis_freq != 0:
+        #     return
+        if pl_module.global_step % self.vis_freq != 0:
             return
         B, S, K, H, W = outputs["masks_t"].size()
         id = random.randint(0, B - 1)
@@ -30,6 +32,13 @@ class PlotCallback(pl.Callback):
             flows = [flow_to_rgb(outputs["oflow_t"][:, i].narrow(0, id, 1)) for i in range(S)]
             flows = [transforms.functional.to_tensor(np.moveaxis(flow.squeeze(), 0, -1)) for flow in flows]
             flowdisp = torchvision.utils.make_grid(torch.stack(flows))
+            if isinstance(pl_module.logger, WandbLogger):
+                pl_module.logger.experiment.log({"OFlow/pred-{}".format(mode): wandb.Image(flowdisp)}, commit=False)
+            elif isinstance(pl_module.logger, TensorBoardLogger):
+                pl_module.logger.experiment.add_image("OFlow/pred-{}".format(mode), flowdisp, pl_module.global_step)
+
+        if not self.vis_imgs:
+            return
 
         if "occmap_t" in outputs:
             occmapdisp = torchvision.utils.make_grid(
@@ -48,11 +57,6 @@ class PlotCallback(pl.Callback):
         )  # value_range=(0, 1)
 
         if isinstance(pl_module.logger, WandbLogger):
-            if "oflow_t" in outputs:
-                pl_module.logger.experiment.log(
-                    {"OFlow/pred-{}".format(mode): wandb.Image(flowdisp)},
-                    commit=False,
-                )
             if "occmap_t" in outputs:
                 pl_module.logger.experiment.log(
                     {
@@ -77,8 +81,6 @@ class PlotCallback(pl.Callback):
             )
 
         elif isinstance(pl_module.logger, TensorBoardLogger):
-            if "oflow_t" in outputs:
-                pl_module.logger.experiment.add_image("OFlow/pred-{}".format(mode), flowdisp, pl_module.global_step)
             if "occmap_t" in outputs:
                 pl_module.logger.experiment.add_image("Masks/Occ_{}".format(mode), occmapdisp, pl_module.global_step)
             pl_module.logger.experiment.add_image("RGBs/gt-{}".format(mode), gt_rgbdisp, pl_module.global_step)

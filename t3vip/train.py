@@ -91,7 +91,7 @@ def setup_logger(cfg: DictConfig, model: LightningModule, name: str, evaluate: b
         if hasattr(cfg, "ray"):
             cfg.logger.group = cfg.ray.name
             cfg.logger.name = name
-        else:
+        elif cfg.slurm:
             cfg.logger.group = cwd_path.parts[5]
         cfg.logger.id = cfg.logger.name.replace("/", "_")
 

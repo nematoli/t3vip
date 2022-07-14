@@ -1,10 +1,9 @@
 import logging
-from typing import Dict, Optional, Union, Any, List
+from typing import Dict, Union, Any, List
 import hydra
 from omegaconf import DictConfig
 import torch
-import pytorch_lightning as pl
-from pytorch_lightning.utilities import rank_zero_only
+from t3vip.models.video import VideoModel
 
 from t3vip.utils.net_utils import gen_nxtrgb, scheduled_sampling
 from t3vip.helpers.losses import calc_2d_loss, calc_kl_loss
@@ -17,21 +16,15 @@ from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPI
 logger = logging.getLogger(__name__)
 
 
-@rank_zero_only
-def log_rank_0(*args, **kwargs):
-    # when using ddp, only log with rank 0 process
-    logger.info(*args, **kwargs)
-
-
-class SV2P(pl.LightningModule):
+class SV2P(VideoModel):
     """
     The lightning module used for training self-supervised t3vip.
     Args:
         obs_encoder: DictConfig for ptc_encoder.
         act_encoder: DictConfig for act_encoder.
         msk_decoder: DictConfig for msk_encoder.
-        se3_decoder: DictConfig for se3_decoder.
-        rgbd_inpainter: DictConfig for rgbd_inpainter.
+        knl_decoder: DictConfig for se3_decoder.
+        inference_net: DictConfig for rgbd_inpainter.
         optimizer: DictConfig for optimizer.
         lr_scheduler: DictConfig for learning rate scheduler.
     """
@@ -88,14 +81,16 @@ class SV2P(pl.LightningModule):
         return {"optimizer": optimizer}
 
     def forward(
-        self, rgbs: torch.Tensor, acts: torch.Tensor, stts: torch.Tensor, inference: bool, p: float
+        self, dpts: torch.Tensor, rgbs: torch.Tensor, acts: torch.Tensor, stts: torch.Tensor, inference: bool, p: float
     ) -> Dict[str, torch.Tensor]:
         """
         Main forward pass for at each step.
         Args:
+            dpts: point cloud of time step t.
             rgbs: point cloud of time step t.
             acts: action executed at time step t.
             stts: action executed at time step t.
+            inference: action executed at time step t.
             p: action executed at time step t.
 
         Returns:
@@ -137,10 +132,12 @@ class SV2P(pl.LightningModule):
 
             outputs_cell, latent, lstm_states = self.forward_single_frame(
                 rgb_t,
+                None,
                 act_t,
                 stt_t,
                 rgb_1,
                 rgb_complete,
+                None,
                 latent,
                 lstm_states,
             )
@@ -161,10 +158,12 @@ class SV2P(pl.LightningModule):
     def forward_single_frame(
         self,
         rgb_t: torch.Tensor,
+        dpt_t: torch.Tensor,
         act_t: torch.Tensor,
         stt_t: torch.Tensor,
         rgb_1: torch.Tensor,
         rgb_complete: torch.Tensor,
+        dpt_complete: torch.Tensor,
         latent: torch.Tensor,
         lstm_states: List[torch.Tensor],
     ):
@@ -230,10 +229,11 @@ class SV2P(pl.LightningModule):
         inference = True if self.stochastic and self.global_step > self.gen_iters else False
         p = 1.0
 
-        out = self(batch["rgb_obs"], acts, stts, inference, p)
+        out = self(None, batch["rgb_obs"], acts, stts, inference, p)
         losses = self.loss(batch, out)
         self.log_loss(losses, mode="train")
-        self.log_metrics(batch, out, mode="train", on_step=True, on_epoch=False)
+        metrics = self.metrics(batch, out)
+        self.log_metrics(metrics, mode="train", on_step=True, on_epoch=False)
         return {"loss": losses["loss_total"], "out": out}
 
     def validation_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Dict[str, Union[torch.Tensor, Any]]:
@@ -253,10 +253,11 @@ class SV2P(pl.LightningModule):
         stts = None
         inference = False
         p = 0.0
-        out = self(batch["rgb_obs"], acts, stts, inference, p)
+        out = self(None, batch["rgb_obs"], acts, stts, inference, p)
         losses = self.loss(batch, out)
         self.log_loss(losses, mode="val")
-        self.log_metrics(batch, out, mode="val", on_step=False, on_epoch=True)
+        metrics = self.metrics(batch, out)
+        self.log_metrics(metrics, mode="val", on_step=False, on_epoch=True)
         return {"loss": losses["loss_total"], "out": out}
 
     def test_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Dict[str, Union[torch.Tensor, Any]]:
@@ -276,26 +277,11 @@ class SV2P(pl.LightningModule):
         stts = None
         inference = False
         p = 0.0
-        out = self(batch["rgb_obs"], acts, stts, inference, p)
+        out = self(None, batch["rgb_obs"], acts, stts, inference, p)
         losses = self.loss(batch, out)
-        self.log_loss(losses, mode="test")
+        metrics = self.metrics(batch, out)
+        self.log_metrics(metrics, mode="test", on_step=False, on_epoch=True)
         return {"loss": losses["loss_total"], "out": out}
-
-    @rank_zero_only
-    def on_train_epoch_start(self) -> None:
-        logger.info(f"Start training epoch {self.current_epoch}")
-
-    @rank_zero_only
-    def on_train_epoch_end(self, unused: Optional = None) -> None:
-        logger.info(f"Finished training epoch {self.current_epoch}")
-
-    @rank_zero_only
-    def on_validation_epoch_start(self) -> None:
-        log_rank_0(f"Start validation epoch {self.current_epoch}")
-
-    @rank_zero_only
-    def on_validation_epoch_end(self) -> None:
-        logger.info(f"Finished validation epoch {self.current_epoch}")
 
     def loss(self, batch: Dict[str, torch.Tensor], outputs: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
 
@@ -323,9 +309,7 @@ class SV2P(pl.LightningModule):
         return losses
 
     @torch.no_grad()
-    def log_metrics(
-        self, batch: Dict[str, torch.Tensor], outputs: Dict[str, torch.Tensor], mode: str, on_step: bool, on_epoch: bool
-    ):
+    def metrics(self, batch: Dict[str, torch.Tensor], outputs: Dict[str, torch.Tensor]):
         true_img, pred_img = batch_seq_view(batch["rgb_obs"][:, 1:]), batch_seq_view(outputs["nxtrgb"])
 
         ssim = SSIM(pred_img, true_img, data_range=1.0)
@@ -334,21 +318,6 @@ class SV2P(pl.LightningModule):
         true_img = torch.clamp((true_img - 0.5) * 2, min=-1, max=1)
         lpips = 1 - self.lpips(pred_img, true_img)
 
-        self.log("metrics/{}-VGG".format(mode), lpips, on_step=on_step, on_epoch=on_epoch)
-        self.log("metrics/{}-SSIM".format(mode), ssim, on_step=on_step, on_epoch=on_epoch)
-        self.log("metrics/{}-IPSNR".format(mode), ipsnr, on_step=on_step, on_epoch=on_epoch)
+        metrics = {"metrics_VGG": lpips, "metrics_SSIM": ssim, "metrics_IPSNR": ipsnr}
 
-    def set_kl_beta(self, alpha_kl):
-        """Set alpha_kl from Callback"""
-        self.alpha_kl = alpha_kl
-
-    def log_loss(
-        self,
-        loss: Dict[str, torch.Tensor],
-        mode: str,
-    ):
-
-        for key, val in loss.items():
-            if loss[key] != 0:
-                info = key.split("_")
-                self.log(info[0] + "/{}_".format(mode) + info[1], loss[key])
+        return metrics

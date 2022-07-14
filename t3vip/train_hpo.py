@@ -30,6 +30,21 @@ def overwrite_model_cfg(model_cfg, sampled_cfg):
     for key, value in sampled_cfg.items():
         if key in model_cfg:
             model_cfg[key] = value
+        
+    # Optimizer params
+    if "lr" in sampled_cfg:
+        model_cfg.optimizer.lr = sampled_cfg["lr"]
+    if "weight_decay" in sampled_cfg:
+        model_cfg.optimizer.weight_decay = sampled_cfg["weight_decay"]
+    if "eps" in sampled_cfg:
+        model_cfg.optimizer.eps = sampled_cfg["eps"]
+
+    # Lr scheduler
+    if "lr_scheduler" in sampled_cfg and sampled_cfg["lr_scheduler"] is not None:
+        lr_scheduler_cfg = {"_target_": sampled_cfg["lr_scheduler"]}
+        if "CosineAnnealingLR" in sampled_cfg["lr_scheduler"]:
+            lr_scheduler_cfg["T_max"] = max_epochs_ceil
+        model_cfg.lr_scheduler = lr_scheduler_cfg
 
     return model_cfg
 

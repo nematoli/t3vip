@@ -135,7 +135,8 @@ class T3VIP(VideoModel):
 
         outputs_cell = {}
         outputs = {
-            "emb_t": [],
+            "s_t": [],
+            "s_prime_t": [],
             "masks_t": [],
             "tfmptc_t": [],
             "sflow_t": [],
@@ -224,11 +225,12 @@ class T3VIP(VideoModel):
 
         rgbd_t = torch.cat([rgb_t, self.scale_dpt(dpt_t)], dim=1)
         emb_t, obs_lstms = self.obs_encoder(rgbd_t, obs_lstms)
-        emb_ta, act_lstms = self.act_encoder(emb_t[-1], act_t, stt_t, latent, act_lstms)
-        emb_t[-1] = emb_ta
+        s_t = emb_t[-1].clone()
+        s_prime_t, act_lstms = self.act_encoder(emb_t[-1], act_t, stt_t, latent, act_lstms)
+        emb_t[-1] = s_prime_t
 
         masks_t, _, msk_lstms = self.msk_decoder(emb_t, msk_lstms)
-        se3s_t = self.se3_decoder(emb_t[-1])
+        se3s_t = self.se3_decoder(s_prime_t)
 
         ptc_t = get_ptc_from_dpt(dpt_t, self.xygrid)
         tfmptc_t = transform_ptc(ptc_t, masks_t, se3s_t)
@@ -247,7 +249,8 @@ class T3VIP(VideoModel):
         nxt_dpt = torch.clamp(nxt_dpt, min=self.min_dpt, max=self.max_dpt)
 
         outputs = {
-            "emb_t": emb_t[-1],
+            "s_t": s_t,
+            "s_prime_t": s_prime_t,
             "masks_t": masks_t,
             "tfmptc_t": tfmptc_t,
             "sflow_t": sflow_t,

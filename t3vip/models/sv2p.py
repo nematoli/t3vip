@@ -113,7 +113,8 @@ class SV2P(VideoModel):
 
         outputs_cell = {}
         outputs = {
-            "emb_t": [],
+            "s_t": [],
+            "s_prime_t": [],
             "masks_t": [],
             "nxtrgb": [],
         }
@@ -190,8 +191,9 @@ class SV2P(VideoModel):
                 latent = self.dist.sample_latent_code(latent_dist).to(act_t.device)
 
         emb_t, obs_lstms = self.obs_encoder(rgb_t, obs_lstms)
-        emb_ta, act_lstms = self.act_encoder(emb_t[-1], act_t, stt_t, latent, act_lstms)
-        emb_t[-1] = emb_ta
+        s_t = emb_t[-1].clone()
+        s_prime_t, act_lstms = self.act_encoder(emb_t[-1], act_t, stt_t, latent, act_lstms)
+        emb_t[-1] = s_prime_t
 
         masks_t, _, msk_lstms = self.msk_decoder(emb_t, msk_lstms)
         tfmrgb_t = self.knl_decoder(emb_t[-1], rgb_t)
@@ -200,7 +202,8 @@ class SV2P(VideoModel):
         nxt_rgb = gen_nxtrgb(rgb_t, masks_t, tfmrgb_t, rgb_extra)
 
         outputs = {
-            "emb_t": emb_t[-1],
+            "s_t": s_t,
+            "s_prime_t": s_prime_t,
             "masks_t": masks_t,
             "nxtrgb": nxt_rgb,
         }

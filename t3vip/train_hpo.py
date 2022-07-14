@@ -58,7 +58,7 @@ def train_t3vip(config: dict = {}, cfg: DictConfig = {}, budget: int = 10, num_g
     log_rank_0(print_system_env_info())
     train_logger = setup_logger(cfg, model, tune.get_trial_id())
     callbacks = setup_callbacks(cfg.callbacks)
-    metrics = {"SPSNR": "metrics/val-SPSNR", "IPSNR": "metrics/val-IPSNR"}
+    metrics = {"SPSNR": "metrics/val-SPSNR", "IPSNR": "metrics/val-IPSNR", "VGG": "metrics/val-VGG"}
     tc = TuneReportCheckpointCallback(metrics=metrics, filename="checkpoint", on="validation_end")
     callbacks.append(tc)
 

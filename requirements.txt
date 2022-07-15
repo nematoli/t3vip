@@ -1,6 +1,6 @@
 hydra-core
 hydra-colorlog
-torch
+torch==1.11.0
 torchvision
 torchmetrics
 cupy-cuda102

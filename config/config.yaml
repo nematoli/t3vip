@@ -13,6 +13,7 @@ defaults:
 seed: 42
 log_dir: ../
 slurm: false
+eval_seq_len: 60
 
 hydra:
   run:

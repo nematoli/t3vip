@@ -26,6 +26,7 @@ class PlotCallback(pl.Callback):
         #     return
         if pl_module.global_step % self.vis_freq != 0:
             return
+        commit = False if mode == "train" else True
         B, S, K, H, W = outputs["masks_t"].size()
         id = random.randint(0, B - 1)
         if "oflow_t" in outputs:
@@ -33,7 +34,7 @@ class PlotCallback(pl.Callback):
             flows = [transforms.functional.to_tensor(np.moveaxis(flow.squeeze(), 0, -1)) for flow in flows]
             flowdisp = torchvision.utils.make_grid(torch.stack(flows))
             if isinstance(pl_module.logger, WandbLogger):
-                pl_module.logger.experiment.log({"OFlow/pred-{}".format(mode): wandb.Image(flowdisp)}, commit=False)
+                pl_module.logger.experiment.log({"OFlow/pred-{}".format(mode): wandb.Image(flowdisp)}, commit=commit)
             elif isinstance(pl_module.logger, TensorBoardLogger):
                 pl_module.logger.experiment.add_image("OFlow/pred-{}".format(mode), flowdisp, pl_module.global_step)
 
@@ -62,22 +63,22 @@ class PlotCallback(pl.Callback):
                     {
                         "Masks/Occ_{}".format(mode): wandb.Image(occmapdisp),
                     },
-                    commit=False,
+                    commit=commit,
                 )
 
             pl_module.logger.experiment.log(
                 {"RGBs/gt-{}".format(mode): wandb.Image(gt_rgbdisp)},
-                commit=False,
+                commit=commit,
             )
 
             pl_module.logger.experiment.log(
                 {"RGBs/pred-{}".format(mode): wandb.Image(rgbdisp)},
-                commit=False,
+                commit=commit,
             )
 
             pl_module.logger.experiment.log(
                 {"Masks/{}".format(mode): wandb.Image(masksdisp)},
-                commit=False,
+                commit=commit,
             )
 
         elif isinstance(pl_module.logger, TensorBoardLogger):

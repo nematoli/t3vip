@@ -17,6 +17,7 @@ from torchmetrics.functional import peak_signal_noise_ratio as PSNR
 from torchmetrics.functional import structural_similarity_index_measure as SSIM
 from torchmetrics.functional import mean_squared_error as RMSE
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
+from t3vip.utils.abs_rel_err import mean_absolute_relative_error as MARE
 
 logger = logging.getLogger(__name__)
 
@@ -408,6 +409,7 @@ class T3VIP(VideoModel):
         true_img = torch.clamp((true_img - 0.5) * 2, min=-1, max=1)
         lpips = 1 - self.lpips(pred_img, true_img)
         rmse = RMSE(pred_dpt, true_dpt, squared=False)
+        mare = MARE(pred_dpt, true_dpt)
 
         metrics = {
             "metrics_VGG": lpips,
@@ -416,6 +418,7 @@ class T3VIP(VideoModel):
             "metrics_DPSNR": dpsnr,
             "metrics_SPSNR": spsnr,
             "metrics_RMSE": rmse,
+            "metrics_MARE": mare,
         }
 
         return metrics

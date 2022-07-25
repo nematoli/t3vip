@@ -22,7 +22,7 @@ def _mean_absolute_relative_error_update(preds: Tensor, target: Tensor) -> Tuple
     return sum_abs_rel_error, n_obs
 
 
-def _mean_absolute_relative_error_compute(sum_abs_error: Tensor, n_obs: int) -> Tensor:
+def _mean_absolute_relative_error_compute(sum_abs_rel_error: Tensor, n_obs: int) -> Tensor:
     """Computes Mean Absolute Relative Error.
 
     Args:

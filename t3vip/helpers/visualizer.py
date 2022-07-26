@@ -7,6 +7,7 @@ from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 import wandb
 from t3vip.utils.cam_utils import flow_to_rgb
 import numpy as np
+from t3vip.utils.running_stats import RunningStats
 
 
 class PlotCallback(pl.Callback):
@@ -19,6 +20,9 @@ class PlotCallback(pl.Callback):
 
         self.vis_imgs = vis_imgs
         self.vis_freq = vis_freq
+
+        self.psnr, self.ssim, self.vgg = RunningStats(), RunningStats(), RunningStats()
+        self.rmse, self.mare = RunningStats(), RunningStats()
 
     @torch.no_grad()
     def log_images(self, pl_module, batch, outputs, mode="train"):
@@ -91,6 +95,19 @@ class PlotCallback(pl.Callback):
         else:
             raise ValueError
 
+    @torch.no_grad()
+    def log_tables(self, pl_module):
+        data = [
+            ["mean", self.psnr.mean(), self.ssim.mean(), self.vgg.mean()],
+            ["std", self.psnr.std(), self.ssim.std(), self.vgg.std()],
+        ]
+        columns = ["stat", "psnr", "ssim", "vgg"]
+        if self.rmse.size() > 0:
+            data[0] += [self.rmse.mean(), self.mare.mean()]
+            data[1] += [self.rmse.std(), self.mare.std()]
+            columns += ["rmse", "mare"]
+        pl_module.logger.experiment.log({"Stats": wandb.Table(data=data, columns=columns)})
+
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, **kwargs):
         self.log_images(pl_module, batch, outputs["out"], mode="train")
 
@@ -99,3 +116,12 @@ class PlotCallback(pl.Callback):
 
     def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         self.log_images(pl_module, batch, outputs["out"], mode="test")
+        self.psnr.push(outputs["metrics"]["metrics_IPSNR"])
+        self.ssim.push(outputs["metrics"]["metrics_SSIM"])
+        self.vgg.push(outputs["metrics"]["metrics_VGG"])
+        if "metrics_RMSE" in outputs["metrics"]:
+            self.rmse.push(outputs["metrics"]["metrics_RMSE"])
+            self.mare.push(outputs["metrics"]["metrics_MARE"])
+
+    def on_test_epoch_end(self, trainer, pl_module):
+        self.log_tables(pl_module)

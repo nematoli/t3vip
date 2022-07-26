@@ -281,10 +281,9 @@ class SV2P(VideoModel):
         inference = False
         p = 0.0
         out = self(None, batch["rgb_obs"], acts, stts, inference, p)
-        losses = self.loss(batch, out)
         metrics = self.metrics(batch, out)
         self.log_metrics(metrics, mode="test", on_step=False, on_epoch=True)
-        return {"loss": losses["loss_total"], "out": out}
+        return {"out": out, "metrics": metrics}
 
     def loss(self, batch: Dict[str, torch.Tensor], outputs: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
 

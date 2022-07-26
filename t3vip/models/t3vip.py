@@ -17,7 +17,7 @@ from torchmetrics.functional import peak_signal_noise_ratio as PSNR
 from torchmetrics.functional import structural_similarity_index_measure as SSIM
 from torchmetrics.functional import mean_squared_error as RMSE
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
-from t3vip.utils.abs_rel_err import mean_absolute_relative_error as MARE
+from t3vip.utils.mare import mean_absolute_relative_error as MARE
 
 logger = logging.getLogger(__name__)
 
@@ -336,11 +336,9 @@ class T3VIP(VideoModel):
         p = 0.0
         inference = False
         out = self(batch["depth_obs"], batch["rgb_obs"], acts, stts, p, inference)
-        losses = self.loss(batch, out)
-        self.log_loss(losses, mode="test")
         metrics = self.metrics(batch, out)
         self.log_metrics(metrics, mode="test", on_step=False, on_epoch=True)
-        return {"loss": losses["loss_total"], "out": out}
+        return {"out": out, "metrics": metrics}
 
     def loss(self, batch: Dict[str, torch.Tensor], outputs: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         (loss_3d, loss_2d, loss_kl, total_loss) = (

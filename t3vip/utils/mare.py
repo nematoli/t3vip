@@ -51,7 +51,7 @@ def mean_absolute_relative_error(preds: Tensor, target: Tensor) -> Tensor:
         Tensor with MARE
 
     Example:
-        >>> from torchmetrics.functional import mean_absolute_relative_error
+        >>> from t3vip.utils.mare import mean_absolute_relative_error
         >>> x = torch.tensor([0., 1, 2, 3])
         >>> y = torch.tensor([0., 1, 2, 2])
         >>> mean_absolute_relative_error(x, y)

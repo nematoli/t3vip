@@ -1,5 +1,5 @@
 defaults:
-  - checkpoint: default
+  - checkpoint: epoch
   - early_stopping: default
   - kl_schedule: linear
   - plot: default

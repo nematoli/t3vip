@@ -30,6 +30,7 @@ def evaluate(cfg: DictConfig) -> None:
     dataset_name = cfg.datamodule.dataset["_target_"].split(".")[-1]
     intrinsics, xygrid = get_intrinsics(cfg.datamodule, dataset_name)
     seq_len = cfg.eval_seq_len
+    cfg.datamodule.batch_size = 1
     datamodule = hydra.utils.instantiate(cfg.datamodule, intrinsics=intrinsics, xygrid=xygrid, seq_len=seq_len)
     chk = get_last_checkpoint(Path.cwd())
 

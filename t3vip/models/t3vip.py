@@ -62,6 +62,7 @@ class T3VIP(VideoModel):
         max_dpt: float,
         time_invariant: bool,
         stochastic: bool,
+        num_priors: int,
         gen_iters: int,
     ):
         super(VideoModel, self).__init__()
@@ -95,9 +96,9 @@ class T3VIP(VideoModel):
         self.gen_iters = gen_iters
         if self.stochastic:
             self.prior = self.dist.set_unit_dist(self.inference_net.dim_latent)
+            self.num_priors = num_priors
         self.intrinsics = intrinsics
         self.lpips = LPIPS(net_type="vgg").to(self.device)
-
         self.save_hyperparameters()
 
     def configure_optimizers(self):
@@ -333,10 +334,23 @@ class T3VIP(VideoModel):
         """
         acts = batch["actions"] if self.act_cond else None
         stts = None
-        p = 0.0
         inference = False
-        out = self(batch["depth_obs"], batch["rgb_obs"], acts, stts, p, inference)
-        metrics = self.metrics(batch, out)
+        p = 0.0
+        assert batch["rgb_obs"].shape[0] == 1
+        if self.stochastic:
+            priors_metrics = []
+            outs = []
+            for i in range(self.num_priors):
+                out = self(batch["depth_obs"], batch["rgb_obs"], acts, stts, inference, p)
+                m = self.metrics(batch, out)
+                outs.append(out)
+                priors_metrics.append(m)
+            metrics = max(priors_metrics, key=lambda x: x["metrics_VGG"])
+            out = outs[priors_metrics.index(metrics)]
+        else:
+            out = self(batch["depth_obs"], batch["rgb_obs"], acts, stts, p, inference)
+            metrics = self.metrics(batch, out)
+
         self.log_metrics(metrics, mode="test", on_step=False, on_epoch=True)
         return {"out": out, "metrics": metrics}
 

@@ -49,6 +49,7 @@ class SV2P(VideoModel):
         reuse_first_rgb: bool,
         time_invariant: bool,
         stochastic: bool,
+        num_priors: int,
         gen_iters: int,
     ):
         super(SV2P, self).__init__()
@@ -73,6 +74,7 @@ class SV2P(VideoModel):
         self.gen_iters = gen_iters
         if self.stochastic:
             self.prior = self.dist.set_unit_dist(self.inference_net.dim_latent)
+            self.num_priors = num_priors
         self.lpips = LPIPS(net_type="vgg").to(self.device)
         self.save_hyperparameters()
 
@@ -280,8 +282,21 @@ class SV2P(VideoModel):
         stts = None
         inference = False
         p = 0.0
-        out = self(None, batch["rgb_obs"], acts, stts, inference, p)
-        metrics = self.metrics(batch, out)
+        assert batch["rgb_obs"].shape[0] == 1
+        if self.stochastic:
+            priors_metrics = []
+            outs = []
+            for i in range(self.num_priors):
+                out = self(None, batch["rgb_obs"], acts, stts, inference, p)
+                m = self.metrics(batch, out)
+                outs.append(out)
+                priors_metrics.append(m)
+            metrics = max(priors_metrics, key=lambda x: x["metrics_VGG"])
+            out = outs[priors_metrics.index(metrics)]
+        else:
+            out = self(None, batch["rgb_obs"], acts, stts, inference, p)
+            metrics = self.metrics(batch, out)
+
         self.log_metrics(metrics, mode="test", on_step=False, on_epoch=True)
         return {"out": out, "metrics": metrics}
 

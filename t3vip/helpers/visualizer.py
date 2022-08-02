@@ -37,13 +37,11 @@ class PlotCallback(pl.Callback):
             flows = [flow_to_rgb(outputs["oflow_t"][:, i].narrow(0, id, 1)) for i in range(S)]
             flows = [transforms.functional.to_tensor(np.moveaxis(flow.squeeze(), 0, -1)) for flow in flows]
             flowdisp = torchvision.utils.make_grid(torch.stack(flows))
+
             if isinstance(pl_module.logger, WandbLogger):
                 pl_module.logger.experiment.log({"OFlow/pred-{}".format(mode): wandb.Image(flowdisp)}, commit=commit)
             elif isinstance(pl_module.logger, TensorBoardLogger):
                 pl_module.logger.experiment.add_image("OFlow/pred-{}".format(mode), flowdisp, pl_module.global_step)
-
-        if not self.vis_imgs:
-            return
 
         if "occmap_t" in outputs:
             occmapdisp = torchvision.utils.make_grid(
@@ -51,6 +49,14 @@ class PlotCallback(pl.Callback):
                 normalize=True,
                 range=(0, 1),
             )
+
+            if isinstance(pl_module.logger, WandbLogger):
+                pl_module.logger.experiment.log({"Masks/Occ_{}".format(mode): wandb.Image(occmapdisp)}, commit=commit)
+            elif isinstance(pl_module.logger, TensorBoardLogger):
+                pl_module.logger.experiment.add_image("Masks/Occ_{}".format(mode), occmapdisp, pl_module.global_step)
+
+        if not self.vis_imgs:
+            return
 
         gt_rgbdisp = torchvision.utils.make_grid(batch["rgb_obs"][id][1:])
         rgbdisp = torchvision.utils.make_grid(outputs["nxtrgb"][id])
@@ -62,32 +68,11 @@ class PlotCallback(pl.Callback):
         )  # value_range=(0, 1)
 
         if isinstance(pl_module.logger, WandbLogger):
-            if "occmap_t" in outputs:
-                pl_module.logger.experiment.log(
-                    {
-                        "Masks/Occ_{}".format(mode): wandb.Image(occmapdisp),
-                    },
-                    commit=commit,
-                )
-
-            pl_module.logger.experiment.log(
-                {"RGBs/gt-{}".format(mode): wandb.Image(gt_rgbdisp)},
-                commit=commit,
-            )
-
-            pl_module.logger.experiment.log(
-                {"RGBs/pred-{}".format(mode): wandb.Image(rgbdisp)},
-                commit=commit,
-            )
-
-            pl_module.logger.experiment.log(
-                {"Masks/{}".format(mode): wandb.Image(masksdisp)},
-                commit=commit,
-            )
+            pl_module.logger.experiment.log({"RGBs/gt-{}".format(mode): wandb.Image(gt_rgbdisp)}, commit=commit)
+            pl_module.logger.experiment.log({"RGBs/pred-{}".format(mode): wandb.Image(rgbdisp)}, commit=commit)
+            pl_module.logger.experiment.log({"Masks/{}".format(mode): wandb.Image(masksdisp)}, commit=commit)
 
         elif isinstance(pl_module.logger, TensorBoardLogger):
-            if "occmap_t" in outputs:
-                pl_module.logger.experiment.add_image("Masks/Occ_{}".format(mode), occmapdisp, pl_module.global_step)
             pl_module.logger.experiment.add_image("RGBs/gt-{}".format(mode), gt_rgbdisp, pl_module.global_step)
             pl_module.logger.experiment.add_image("RGBs/pred-{}".format(mode), rgbdisp, pl_module.global_step)
             pl_module.logger.experiment.add_image("Masks/{}".format(mode), masksdisp, pl_module.global_step)

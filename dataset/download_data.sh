@@ -35,8 +35,6 @@ then
     unzip task_ABC_D.zip && rm task_ABC_D.zip
     mv task_BCD_A task_ABC_D
     echo "saved folder: task_ABC_D"
-
-else
 else
     echo "Failed: Usage download_data.sh dexhand | omnipush | calvin"
     exit 1

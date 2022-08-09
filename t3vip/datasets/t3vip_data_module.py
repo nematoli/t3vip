@@ -23,7 +23,7 @@ class T3VIPDataModule(pl.LightningDataModule):
         intrinsics: Dict,
         xygrid: torch.Tensor,
         seq_len: int,
-        step_len: int,
+        skip_frames: int,
         **kwargs: Dict,
     ):
         super().__init__()
@@ -62,7 +62,7 @@ class T3VIPDataModule(pl.LightningDataModule):
         self.transforms = transforms
         self.intrinsics = intrinsics
         self.xygrid = xygrid
-        self.step_len = step_len
+        self.skip_frames = skip_frames
         self.seq_len = seq_len
 
     def setup(self, stage=None):
@@ -72,7 +72,7 @@ class T3VIPDataModule(pl.LightningDataModule):
             img_ht=self.resolution,
             img_wd=self.resolution,
             seq_len=self.seq_len,
-            step_len=self.step_len,
+            skip_frames=self.skip_frames,
             train=True,
             transforms=self.transforms,
             intrinsics=self.intrinsics,
@@ -85,7 +85,7 @@ class T3VIPDataModule(pl.LightningDataModule):
             img_ht=self.resolution,
             img_wd=self.resolution,
             seq_len=self.seq_len,
-            step_len=self.step_len,
+            skip_frames=self.skip_frames,
             train=False,
             transforms=self.transforms,
             intrinsics=self.intrinsics,
@@ -98,7 +98,7 @@ class T3VIPDataModule(pl.LightningDataModule):
             img_ht=self.resolution,
             img_wd=self.resolution,
             seq_len=self.seq_len,
-            step_len=self.step_len,
+            skip_frames=self.skip_frames,
             train=False,
             transforms=self.transforms,
             intrinsics=self.intrinsics,

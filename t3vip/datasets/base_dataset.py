@@ -28,7 +28,7 @@ class BaseDataset(Dataset):
         max_dpt: float,
         frac_used: float,
         seq_len: int,
-        step_len: int,
+        skip_frames: int,
         train: bool,
         transforms: Dict,
         intrinsics: Dict,
@@ -42,7 +42,8 @@ class BaseDataset(Dataset):
         self.dim_state = dim_state
         self.far_val = far_val
         self.seq_len = seq_len
-        self.step_len = step_len
+        self.skip_frames = skip_frames
+        self.step_len = self.skip_frames + 1
         self.min_dpt = min_dpt
         self.max_dpt = max_dpt
         self.transforms = transforms

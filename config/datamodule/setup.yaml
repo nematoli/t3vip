@@ -6,4 +6,4 @@ resolution:   64
 intrinsics:   ???
 xygrid:       ???
 seq_len:      12  # num_context_frames + prediction_horizion
-step_len:     1
+skip_frames:  0

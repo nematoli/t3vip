@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 import sys
-from typing import List, Union
+from typing import List
 import os
 
 cwd_path = Path(__file__).absolute().parents[0]
@@ -14,7 +14,7 @@ from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import Callback, LightningModule, seed_everything, Trainer
 from pytorch_lightning.loggers import LightningLoggerBase
 from pytorch_lightning.utilities import rank_zero_only
-from t3vip.utils.utils import get_git_commit_hash, print_system_env_info, get_last_checkpoint, get_model_via_name
+from t3vip.utils.utils import print_system_env_info, get_last_checkpoint, get_model_via_name
 from t3vip.datasets.utils.load_utils import get_intrinsics
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,6 @@ def train(cfg: DictConfig) -> None:
         model = hydra.utils.instantiate(cfg.model, intrinsics=intrinsics, xygrid=xygrid)
 
     log_rank_0(f"Training with the following config:\n{OmegaConf.to_yaml(cfg)}")
-    # log_rank_0("Repo commit hash: {}".format(get_git_commit_hash(Path(hydra.utils.to_absolute_path(__file__)))))
     log_rank_0(print_system_env_info())
     train_logger = setup_logger(cfg, model, cfg.logger.name)
     callbacks = setup_callbacks(cfg.callbacks)

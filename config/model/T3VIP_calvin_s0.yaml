@@ -10,14 +10,14 @@ _recursive_: false
 
 splat: average
 stochastic: true
-alpha_rcr: 0.7765922
-alpha_rcd: 0.02302978
-alpha_knn: 0.2148149
-alpha_sfs: 0.03865816
-alpha_ofs: 0.0012229
+alpha_rcr: 0.4815314
+alpha_rcd: 0.0723196
+alpha_knn: 0.0158731
+alpha_sfs: 0.0043173
+alpha_ofs: 0.0038682
 alpha_kl: 0.001
 alpha_l: 2
 min_dpt: ${datamodule.dataset.min_dpt}
 max_dpt: ${datamodule.dataset.max_dpt}
 optimizer:
-  lr: 0.000121589
+  lr: 0.0004699

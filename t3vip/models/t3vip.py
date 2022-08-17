@@ -60,7 +60,6 @@ class T3VIP(VideoModel):
         alpha_l: int,
         min_dpt: float,
         max_dpt: float,
-        pred_occmap: bool,
         time_invariant: bool,
         stochastic: bool,
         num_priors: int,
@@ -90,7 +89,6 @@ class T3VIP(VideoModel):
         self.alpha_l = alpha_l
         self.min_dpt = min_dpt
         self.max_dpt = max_dpt
-        self.pred_occmap = pred_occmap
         self.time_invariant = time_invariant
         self.scale_dpt = ScaleDepthTensor(self.min_dpt, self.max_dpt)
         self.real_dpt = RealDepthTensor(self.min_dpt, self.max_dpt)
@@ -245,9 +243,8 @@ class T3VIP(VideoModel):
         fwd_rgb = softsplat.FunctionSoftsplat(rgb_t, oflow_t, None, self.splat)
         fwd_dpt = softsplat.FunctionSoftsplat(tfmptc_t, oflow_t, None, self.splat).narrow(1, 2, 1)
 
-        inp_rgb, inp_dpt, occ_map, inp_lstms = self.rgbd_inpainter(emb_t, inp_lstms)
-        if not self.pred_occmap:
-            occ_map = compute_occlusion(tfmptc_t, self.intrinsics)
+        inp_rgb, inp_dpt, inp_lstms = self.rgbd_inpainter(emb_t, inp_lstms)
+        occ_map = compute_occlusion(tfmptc_t, self.intrinsics)
 
         nxt_rgb = (1 - occ_map) * fwd_rgb + occ_map * inp_rgb
         nxt_dpt = (1 - occ_map) * fwd_dpt + occ_map * self.real_dpt(inp_dpt)

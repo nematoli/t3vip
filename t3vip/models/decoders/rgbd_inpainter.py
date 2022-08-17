@@ -13,14 +13,13 @@ class RGBDInp(nn.Module):
         activation: activation layer after each convolution
     """
 
-    def __init__(self, chn: List[int], dims: List[int], norm: str, activation: str, pred_occmap: bool):
+    def __init__(self, chn: List[int], dims: List[int], norm: str, activation: str):
         super(RGBDInp, self).__init__()
 
         self.chn = chn
         self.dims = dims
         self.norm = norm
         self.activation = activation
-        self.pred_occmap = pred_occmap
 
         self.deconv0 = create_deconv2d(
             self.chn[5],
@@ -62,15 +61,6 @@ class RGBDInp(nn.Module):
             norm=self.norm,
             activation="sigmoid",
         )
-        if self.pred_occmap:
-            self.occmap = create_conv2d(
-                self.chn[7],
-                1,
-                kernel_size=1,
-                stride=1,
-                norm=self.norm,
-                activation="sigmoid",
-            )
 
     def forward(self, emb, lstm_states=None):
         if lstm_states is None:
@@ -97,9 +87,4 @@ class RGBDInp(nn.Module):
         inp_rgb = inp_rgbd[:, :3, :, :]
         inp_dpt = inp_rgbd[:, 3, :, :].unsqueeze(1)
 
-        if self.pred_occmap:
-            occ_map = self.occmap(enc6)
-        else:
-            occ_map = None
-
-        return inp_rgb, inp_dpt, occ_map, lstm_states
+        return inp_rgb, inp_dpt, lstm_states

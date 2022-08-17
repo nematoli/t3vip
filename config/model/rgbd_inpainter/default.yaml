@@ -3,4 +3,3 @@ chn: ${model.obs_encoder.chn}
 dims: ${model.obs_encoder.dims}
 norm: ${model.obs_encoder.norm}
 activation: ${model.obs_encoder.activation}
-pred_occmap: ${model.pred_occmap}

@@ -135,3 +135,15 @@ class T3VIPDataModule(pl.LightningDataModule):
             shuffle=False,
             drop_last=False,
         )
+
+    def subset_dataloader(self, skip=10):
+        idx = list(range(0, len(self.train_dataset), skip))
+        sub_dataset = torch.utils.data.Subset(self.train_dataset, idx)
+        return DataLoader(
+            sub_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=False,
+            shuffle=True,
+            drop_last=True,
+        )

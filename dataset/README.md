@@ -13,6 +13,7 @@ sh download_data.sh dexhand
 ```
 
 ## CALVIN
+We train and validate our models on CALVIN Env C and test them on Env D:
 
 To download the CALVIN dataset:
 ```bash
@@ -22,6 +23,7 @@ sh download_data.sh calvin
 
 ## Omnipush
 
+We use the first split of Omnipush Dataset, consisting of 70 objects without extra weight.
 
 To download the Omnipush dataset:
 ```bash

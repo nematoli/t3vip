@@ -2,10 +2,10 @@
 ### Starting a training
 ```bash
 $ cd $T3VIP_ROOT/slurm_scripts
-$ python slurm_training.py --venv t3vip_venv
+$ python slurm_training.py --venv t3vip_venv --train_file "../t3vip/train.py"
 ```
 This assumes that `--venv t3vip_venv` specifies a conda environment.
-To use virtualenv instead, change line 18 of sbatch_lfp.sh accordingly.
+To use virtualenv instead, change line 18 of sbatch_train.sh and sbatch_eval.sh accordingly.
 
 All hydra arguments can be used as in the normal training.
 

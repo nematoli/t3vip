@@ -6,6 +6,14 @@ from t3vip.utils.net_utils import cdna_convolve
 
 
 class KnlDec(nn.Module):
+    """
+    Convolution Kernal Decoder
+    Args:
+        chn: channel sizes for different layers
+        dims: dimensions of conv outputs
+        num_masks: number of predicted masks
+    """
+
     def __init__(self, chn: List[int], dims: List[int], num_masks: int):
         super(KnlDec, self).__init__()
 

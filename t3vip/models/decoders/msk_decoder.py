@@ -6,9 +6,12 @@ from t3vip.utils.net_utils import create_conv2d, create_deconv2d, ConvLSTMCell
 
 class MskDec(nn.Module):
     """
-    Point Cloud encoder
+    Masks Decoder
     Args:
-        chn: channel sizes for different layers.
+        chn: channel sizes for different layers
+        dims: dimensions of conv outputs
+        num_masks: number of predicted masks
+        extra: if true, predicts an extra mask
         norm: normalization layer after each convolution
         activation: activation layer after each convolution
     """

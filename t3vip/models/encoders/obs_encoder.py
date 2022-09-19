@@ -5,9 +5,11 @@ from t3vip.utils.net_utils import create_conv2d, ConvLSTMCell
 
 class ObsEnc(nn.Module):
     """
-    Point Cloud encoder
+    Observatoin Encoder
     Args:
-        chn: channel sizes for different layers.
+        chn: channel sizes for different layers
+        dims: dimensions of conv outputs
+        input_chn: number of input channels (3 for RGB and 4 for RGBD)
         norm: normalization layer after each convolution
         activation: activation layer after each convolution
     """

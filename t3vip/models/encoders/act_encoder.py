@@ -6,9 +6,13 @@ from t3vip.utils.net_utils import create_conv2d, ConvLSTMCell
 
 class ActEnc(nn.Module):
     """
-    Point Cloud encoder
+    Action Encoder
     Args:
-        chn: channel sizes for different layers.
+        chn: channel sizes for different layers
+        dims: dimensions of conv outputs
+        dim_action: dimension of action
+        dim_state: dimension of state
+        dim_latent: dimension of latent
         norm: normalization layer after each convolution
         activation: activation layer after each convolution
     """

@@ -39,7 +39,6 @@ def evaluate(cfg: DictConfig) -> None:
     model = getattr(models_m, model_name).load_from_checkpoint(chk.as_posix())
 
     log_rank_0(f"Evaluating with the following config:\n{OmegaConf.to_yaml(cfg)}")
-    # log_rank_0("Repo commit hash: {}".format(get_git_commit_hash(Path(hydra.utils.to_absolute_path(__file__)))))
     log_rank_0(print_system_env_info())
     train_logger = setup_logger(cfg, model, cfg.logger.name, evaluate=True)
     cfg.callbacks.plot.vis_imgs = True

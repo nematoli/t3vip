@@ -13,10 +13,12 @@ from t3vip.utils.net_utils import (
 
 class SE3Dec(nn.Module):
     """
-    Point Cloud encoder
+    SE3 Transformation Decoder
     Args:
-        chn: channel sizes for different layers.
-        norm: normalization layer after each convolution
+        chn: channel sizes for different layers
+        dims: dimensions of conv outputs
+        num_masks: number of predicted masks
+        se3_type: type of se3
         activation: activation layer after each convolution
     """
 

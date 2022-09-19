@@ -17,7 +17,7 @@ from ray.tune import CLIReporter
 from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
 from pytorch_lightning import seed_everything, Trainer
 from t3vip.datasets.utils.load_utils import get_intrinsics
-from t3vip.utils.utils import print_system_env_info, get_last_checkpoint, get_model_via_name
+from t3vip.utils.utils import print_system_env_info
 from t3vip.train import setup_logger, setup_callbacks, log_rank_0
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def overwrite_model_cfg(model_cfg, sampled_cfg):
     for key, value in sampled_cfg.items():
         if key in model_cfg:
             model_cfg[key] = value
-        
+
     # Optimizer params
     if "lr" in sampled_cfg:
         model_cfg.optimizer.lr = sampled_cfg["lr"]
@@ -39,21 +39,17 @@ def overwrite_model_cfg(model_cfg, sampled_cfg):
     if "eps" in sampled_cfg:
         model_cfg.optimizer.eps = sampled_cfg["eps"]
 
-    # Lr scheduler
-    if "lr_scheduler" in sampled_cfg and sampled_cfg["lr_scheduler"] is not None:
-        lr_scheduler_cfg = {"_target_": sampled_cfg["lr_scheduler"]}
-        if "CosineAnnealingLR" in sampled_cfg["lr_scheduler"]:
-            lr_scheduler_cfg["T_max"] = max_epochs_ceil
-        model_cfg.lr_scheduler = lr_scheduler_cfg
-
     return model_cfg
 
 
-def train_t3vip(config: dict = {}, cfg: DictConfig = {}, budget: int = 10, num_gpus: int = 0, checkpoint_dir=None):
+def train_t3vip(config: dict = {}, cfg: DictConfig = {}, budget: int = 10, num_gpus: int = 0):
     """
     This is called to start a training.
     Args:
+        config: sampled hyperparameters
         cfg: hydra config
+        budget: max time unit per trial
+        num_gpus: num gpus per trial
     """
     seed_everything(cfg.seed, workers=True)
     dataset_name = cfg.datamodule.dataset["_target_"].split(".")[-1]
@@ -73,7 +69,7 @@ def train_t3vip(config: dict = {}, cfg: DictConfig = {}, budget: int = 10, num_g
     log_rank_0(print_system_env_info())
     train_logger = setup_logger(cfg, model, tune.get_trial_id())
     callbacks = setup_callbacks(cfg.callbacks)
-    metrics = {"SPSNR": "metrics/val-SPSNR", "IPSNR": "metrics/val-IPSNR", "VGG": "metrics/val-VGG"}
+    metrics = {"SPSNR": "metrics/val-SPSNR"}
     tc = TuneReportCheckpointCallback(metrics=metrics, filename="checkpoint", on="validation_end")
     callbacks.append(tc)
 

@@ -61,16 +61,20 @@ def train(cfg: DictConfig) -> None:
 
 
 def setup_callbacks(callbacks_cfg: DictConfig) -> List[Callback]:
+    """
+    Set up the callbacks form the hydra config.
+    """
     callbacks = [hydra.utils.instantiate(cb) for cb in callbacks_cfg.values()]
     return callbacks
 
 
-def setup_logger(cfg: DictConfig, model: LightningModule, name: str, evaluate: bool = False) -> LightningLoggerBase:
+def setup_logger(cfg: DictConfig, name: str, evaluate: bool = False) -> LightningLoggerBase:
     """
     Set up the logger (tensorboard or wandb) from hydra config.
     Args:
         cfg: Hydra config
-        model: LightningModule
+        name: name of logger in case of not using slurm or running hpo
+        evaluate: if the logger is for evaluation
     Returns:
         logger
     """
